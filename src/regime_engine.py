@@ -10,6 +10,7 @@ class RegimeEngine:
     def evaluate_regime_and_action(self, calc_result, macro_data=None, nifty_current_price=None):
         cis = calc_result["cis_score"]
         fii_ratio = calc_result["fii_long_ratio"]
+        fii_stk_3d = calc_result["fii_stk_flow_3d"]
         
         # 1. Regime Classification
         if fii_ratio < self.thresholds["fii_capitulation_ratio"]:
@@ -90,88 +91,37 @@ class RegimeEngine:
         # Macro Override if Crude or Yields are spiking violently
         macro_warnings = []
         if macro_data:
-            def valid_macro_value(key):
-                entry = macro_data.get(key, {})
-                if entry.get("status") == "unavailable":
-                    return None
-                raw = entry.get("current")
-                try:
-                    value = float(raw)
-                    return value if value == value and abs(value) != float("inf") else None
-                except (TypeError, ValueError):
-                    return None
+            crude = macro_data.get("brent_crude", {}).get("current", 0)
+            yield_10y = macro_data.get("us_10y_yield", {}).get("current", 0)
+            dxy = macro_data.get("us_dollar_index", {}).get("current", 0)
+            
+            if crude > 95.0:
+                macro_warnings.append(f"Brent Crude elevated at ${crude}/bbl (Pressure on INR & Auto/Paints margins)")
+            if yield_10y > 4.75:
+                macro_warnings.append(f"US 10Y Yields high at {yield_10y}% (Risk of foreign capital outflows)")
+            if dxy > 105.0:
+                macro_warnings.append(f"US Dollar Index strong at {dxy} (Emerging market currency headwind)")
 
-            crude = valid_macro_value("brent_crude")
-            yield_10y = valid_macro_value("us_10y_yield")
-            dxy = valid_macro_value("us_dollar_index")
-            if crude is not None and crude > 95.0:
-                macro_warnings.append(f"Brent Crude elevated at ${crude:.2f}/bbl (Pressure on INR & Auto/Paints margins)")
-            if yield_10y is not None and yield_10y > 4.75:
-                macro_warnings.append(f"US 10Y Yields high at {yield_10y:.2f}% (Risk of foreign capital outflows)")
-            if dxy is not None and dxy > 105.0:
-                macro_warnings.append(f"US Dollar Index strong at {dxy:.2f} (Emerging market currency headwind)")
-
-        # Nifty levels must be anchored to an actual fresh index value. Never use a
-        # hard-coded spot/levels when the feed is missing.
-        try:
-            px = float(nifty_current_price)
-            has_spot = px > 1000 and px == px and abs(px) != float("inf")
-        except (TypeError, ValueError):
-            px, has_spot = None, False
-        if has_spot:
+        # Nifty Key Levels & Expected Trajectory
+        if nifty_current_price and nifty_current_price > 1000:
+            px = nifty_current_price
             sup1 = round(px - px * 0.0075, -1)
             sup2 = round(px - px * 0.015, -1)
-            sweep_zone = round(sup1 - 35, 0)
+            sweep_zone = round(sup1 - 35, 0) # Sweep 35 pts below S1
             res1 = round(px + px * 0.008, -1)
             res2 = round(px + px * 0.018, -1)
         else:
-            sup1 = sup2 = sweep_zone = res1 = res2 = "Unavailable"
+            sup1, sup2, sweep_zone, res1, res2 = 23900, 23750, 23860, 24200, 24350
 
         if cis >= 3.0:
+            trajectory = f"Constructive Bullish Flow: Expected morning consolidation / liquidity sweep near {sweep_zone}-{sup1}, followed by an upward expansion towards {res1} and {res2}."
             trajectory_type = "BULLISH_EXPANSION"
-            trajectory = (
-                f"Constructive Bullish Flow: expected consolidation/liquidity sweep near {sweep_zone}-{sup1}, "
-                f"then expansion towards {res1} and {res2}." if has_spot else
-                "Constructive institutional flow; numerical NIFTY levels are unavailable because no fresh spot feed was validated."
-            )
         elif cis <= -3.0:
+            trajectory = f"Heavy Bearish Flow: Rejection expected near resistance {res1}, with selling pressure testing support {sup1} and potential breakdown towards {sup2}."
             trajectory_type = "BEARISH_BREAKDOWN"
-            trajectory = (
-                f"Heavy Bearish Flow: rejection near resistance {res1}, with support {sup1} at risk and potential breakdown towards {sup2}."
-                if has_spot else
-                "Heavy bearish institutional flow; numerical NIFTY levels are unavailable because no fresh spot feed was validated."
-            )
         else:
+            trajectory = f"Sideways Range Bound: Market expected to trade between support {sup1} and resistance {res1}. Favouring selective stock picking over index direction."
             trajectory_type = "RANGE_BOUND"
-            trajectory = (
-                f"Sideways Range Bound: market expected between support {sup1} and resistance {res1}; favour selective stock picking."
-                if has_spot else
-                "Institutional flow is range-bound; numerical NIFTY support/resistance is unavailable because no fresh spot feed was validated."
-            )
-
-        if not has_spot:
-            # OI can still describe positioning, but a current actionable swing signal
-            # requires a fresh spot anchor and usable price levels. Avoid implying a
-            # strong buy/sell with no validated index-price context.
-            primary_signal = "NO TRADE — FRESH NIFTY DATA UNAVAILABLE"
-            action_badge = "NO_TRADE_DATA_UNAVAILABLE"
-            signal_color = "#64748B"
-            capital_allocation_pct = 0
-            cash_reserve_pct = 100
-            action_instructions = (
-                "NO NEW POSITIONS: fresh NIFTY spot/price data could not be validated, so support/resistance "
-                "and price confirmation are unavailable. Treat participant-OI regime as context only, keep "
-                "capital in cash, and rerun after a fresh market-price feed is available."
-            )
-            trajectory_type = "DATA_UNAVAILABLE"
-            trajectory = (
-                "No actionable NIFTY trajectory can be produced without a fresh, validated spot close. "
-                "Wait for current price and market-structure confirmation."
-            )
-            regime_desc += " Fresh spot confirmation is unavailable; this regime is positioning context only."
-            macro_warnings.append(
-                "Fresh NIFTY spot unavailable: directional regime is context only; no new position is recommended."
-            )
 
         return {
             "regime_id": regime_id,

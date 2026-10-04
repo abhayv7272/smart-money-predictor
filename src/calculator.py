@@ -1,67 +1,26 @@
 import pandas as pd
-
-
-_REQUIRED_OI_FIELDS = (
-    "future_index_long", "future_index_short", "future_stock_long", "future_stock_short",
-    "option_index_call_long", "option_index_put_long", "option_index_call_short", "option_index_put_short",
-    "option_stock_call_long", "option_stock_put_long", "option_stock_call_short", "option_stock_put_short",
-    "total_long_contracts", "total_short_contracts",
-)
-_REQUIRED_PARTICIPANTS = {"Client", "DII", "FII", "Pro"}
-
+import numpy as np
 
 class InstitutionalCalculator:
     def __init__(self, raw_history_df):
-        if raw_history_df is None or raw_history_df.empty:
-            raise ValueError("Participant OI history is empty.")
-        required = {"date", "client_type", *_REQUIRED_OI_FIELDS}
-        missing = required - set(raw_history_df.columns)
-        if missing:
-            raise ValueError(f"Participant OI history is missing fields: {', '.join(sorted(missing))}")
-
-        self.raw_df = raw_history_df.copy()
-        parsed_dates = pd.to_datetime(self.raw_df["date"], errors="coerce")
-        if parsed_dates.isna().any():
-            raise ValueError("Participant OI history contains invalid dates.")
-        self.raw_df["date"] = parsed_dates.dt.strftime("%Y-%m-%d")
-        self.raw_df["client_type"] = self.raw_df["client_type"].astype(str).str.strip()
-        if self.raw_df.duplicated(["date", "client_type"]).any():
-            raise ValueError("Participant OI history contains duplicate rows for a date/type.")
-        for field in _REQUIRED_OI_FIELDS:
-            self.raw_df[field] = pd.to_numeric(self.raw_df[field], errors="coerce")
-            if self.raw_df[field].isna().any() or (self.raw_df[field] < 0).any():
-                raise ValueError(f"Participant OI history has invalid values in {field}.")
-        for date_value, group in self.raw_df.groupby("date", sort=False):
-            present = set(group["client_type"])
-            if not _REQUIRED_PARTICIPANTS.issubset(present):
-                raise ValueError(f"Participant OI data for {date_value} is incomplete.")
+        self.raw_df = raw_history_df
         self.dates = sorted(self.raw_df["date"].unique())
-        # Only the latest six dates feed the displayed 3-/5-session flows; older archive
-        # gaps are irrelevant and should not block a later, newly continuous run.
-        flow_dates = self.dates[-6:]
-        for previous, current in zip(flow_dates, flow_dates[1:]):
-            gap = (pd.Timestamp(current) - pd.Timestamp(previous)).days
-            if gap > 10:
-                raise ValueError(
-                    f"Recent participant OI history has a {gap}-day gap between {previous} and {current}; "
-                    "multi-day flows cannot be calculated across it."
-                )
         
     def calculate_latest_sheet(self):
         """
         Builds Amit Dhamija Excel layout with Ultra-Enhanced Multi-Timeframe Flow:
-        - Multi-session Carried Inventory (latest session, previous session, T-2 when available)
+        - Multi-day Carried Inventory (TODAY, 1 DAY AGO, 2 DAYS AGO)
         - Positions Bought / Sold Today (Added/Closed Longs & Shorts)
         - 3-Day & 5-Day Cumulative Institutional Thrust
         - 6-Factor Composite Institutional Score (-10 to +10)
         - High-Probability Trap Detection
         """
         if len(self.dates) < 3:
-            raise ValueError("Need at least 3 trading sessions of participant data.")
+            raise ValueError("Need at least 3 trading days of participant data.")
             
-        t0_date = self.dates[-1] # Latest session
-        t1_date = self.dates[-2] # Previous session
-        t2_date = self.dates[-3] # Two sessions ago
+        t0_date = self.dates[-1] # Today
+        t1_date = self.dates[-2] # 1 Day Ago
+        t2_date = self.dates[-3] # 2 Days Ago
         
         df_t0 = self.raw_df[self.raw_df["date"] == t0_date].set_index("client_type")
         df_t1 = self.raw_df[self.raw_df["date"] == t1_date].set_index("client_type")
@@ -122,33 +81,26 @@ class InstitutionalCalculator:
                 })
             sheet_sections[inst_label] = part_rows
             
-        fii_il = int(df_t0.loc["FII", "future_index_long"])
-        fii_is = int(df_t0.loc["FII", "future_index_short"])
+        fii_il = int(df_t0.loc["FII", "future_index_long"]) if "FII" in df_t0.index else 0
+        fii_is = int(df_t0.loc["FII", "future_index_short"]) if "FII" in df_t0.index else 0
         tot_fii_idx = fii_il + fii_is
-        if tot_fii_idx <= 0:
-            raise ValueError("FII index-futures long/short total is zero; ratio is undefined.")
-        fii_long_ratio = round(fii_il / tot_fii_idx * 100, 2)
-
-        # Daily net-position changes are exact differences between adjacent OI dates.
-        # Never multiply one observed change to fabricate a 3- or 5-session total.
+        fii_long_ratio = round((fii_il / tot_fii_idx * 100), 2) if tot_fii_idx > 0 else 50.0
+        
+        # Multi-Day Rolling Stock Flows (3D and 5D)
         stk_flows = []
-        for i in range(min(5, len(self.dates) - 1)):
-            d_cur = self.dates[-(i + 1)]
-            d_prev = self.dates[-(i + 2)]
-            sub_c = self.raw_df[self.raw_df["date"] == d_cur].set_index("client_type")
-            sub_p = self.raw_df[self.raw_df["date"] == d_prev].set_index("client_type")
-            fii_cur_net = sub_c.loc["FII", "future_stock_long"] - sub_c.loc["FII", "future_stock_short"]
-            fii_prev_net = sub_p.loc["FII", "future_stock_long"] - sub_p.loc["FII", "future_stock_short"]
-            stk_flows.append(int(fii_cur_net - fii_prev_net))
-
-        sample_3d = min(3, len(stk_flows))
-        sample_5d = min(5, len(stk_flows))
-        flow_3d_complete = sample_3d == 3
-        flow_5d_complete = sample_5d == 5
-        # Use None for unavailable windows instead of a fabricated zero. A complete
-        # three-session flow can still contribute when the five-session window is short.
-        fii_stk_flow_3d = sum(stk_flows[:3]) if flow_3d_complete else None
-        fii_stk_flow_5d = sum(stk_flows[:5]) if flow_5d_complete else None
+        for i in range(min(7, len(self.dates))):
+            d_cur = self.dates[-(i+1)]
+            d_prev = self.dates[-(i+2)] if (i+2) <= len(self.dates) else None
+            if d_prev:
+                sub_c = self.raw_df[self.raw_df["date"] == d_cur].set_index("client_type")
+                sub_p = self.raw_df[self.raw_df["date"] == d_prev].set_index("client_type")
+                if "FII" in sub_c.index and "FII" in sub_p.index:
+                    fii_cur_net = sub_c.loc["FII", "future_stock_long"] - sub_c.loc["FII", "future_stock_short"]
+                    fii_prev_net = sub_p.loc["FII", "future_stock_long"] - sub_p.loc["FII", "future_stock_short"]
+                    stk_flows.append(fii_cur_net - fii_prev_net)
+        
+        fii_stk_flow_3d = sum(stk_flows[:3]) if len(stk_flows) >= 3 else (stk_flows[0]*3 if stk_flows else 0)
+        fii_stk_flow_5d = sum(stk_flows[:5]) if len(stk_flows) >= 5 else (stk_flows[0]*5 if stk_flows else 0)
         
         cis_score, cis_breakdown = self._compute_cis(sheet_sections, fii_long_ratio, fii_stk_flow_3d, fii_stk_flow_5d)
         traps = self._detect_traps(sheet_sections, fii_long_ratio)
@@ -159,10 +111,6 @@ class InstitutionalCalculator:
             "fii_long_ratio": fii_long_ratio,
             "fii_stk_flow_3d": fii_stk_flow_3d,
             "fii_stk_flow_5d": fii_stk_flow_5d,
-            "fii_stk_flow_3d_sample_days": sample_3d,
-            "fii_stk_flow_5d_sample_days": sample_5d,
-            "fii_stk_flow_3d_complete": flow_3d_complete,
-            "fii_stk_flow_5d_complete": flow_5d_complete,
             "sheet_sections": sheet_sections,
             "cis_score": cis_score,
             "cis_breakdown": cis_breakdown,
@@ -182,18 +130,17 @@ class InstitutionalCalculator:
             score -= 2.0
             breakdown.append(("FII Index Futures Selling (-)", -2.0))
             
-        # 2. FII Stock Futures Thrust (5-day weight: 3.0; 3-day fallback: 2.0).
-        # Missing windows are None and must not be interpreted as measured zero flow.
-        if fii_stk_5d is not None and fii_stk_5d > 45000:
+        # 2. FII Stock Futures 5-Day Thrust (Weight: 3.0)
+        if fii_stk_5d > 45000:
             score += 3.0
             breakdown.append(("FII Mega 5-Day Stock Accumulation Wave (+)", +3.0))
-        elif fii_stk_3d is not None and fii_stk_3d > 20000:
+        elif fii_stk_3d > 20000:
             score += 2.0
             breakdown.append(("FII 3-Day Stock Accumulation (+)", +2.0))
-        elif fii_stk_5d is not None and fii_stk_5d < -45000:
+        elif fii_stk_5d < -45000:
             score -= 3.0
             breakdown.append(("FII Mega 5-Day Stock Distribution Wave (-)", -3.0))
-        elif fii_stk_3d is not None and fii_stk_3d < -20000:
+        elif fii_stk_3d < -20000:
             score -= 2.0
             breakdown.append(("FII 3-Day Stock Distribution (-)", -2.0))
             

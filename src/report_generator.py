@@ -1,19 +1,6 @@
 import os
 import datetime
-from html import escape
 from signal_chart_renderer import chart_html
-
-
-def _format_pct(value, signed=False):
-    if value is None:
-        return "—"
-    value = float(value)
-    return f"{value:+.1f}%" if signed else f"{value:.1f}%"
-
-
-def _format_probability(value):
-    return f"{float(value) * 100:.1f}%"
-
 
 class ReportGenerator:
     def __init__(self, output_dir="reports"):
@@ -21,394 +8,13 @@ class ReportGenerator:
         self.output_dir = os.path.join(self.base_dir, output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
 
-    @staticmethod
-    def _normalize_weekly_scan(result):
-        """Accept both the old hit-list API and the newer full scan diagnostics."""
-        if result is None:
-            return None
-        if isinstance(result, dict):
-            normalized = dict(result)
-            normalized["weekly_hits"] = list(result.get("weekly_hits") or [])
-            normalized["near_misses"] = list(result.get("near_misses") or [])
-            normalized["failed_indices"] = list(result.get("failed_indices") or [])
-            if normalized.get("total_scanned") is not None:
-                normalized.setdefault(
-                    "scanned_indices",
-                    max(int(normalized["total_scanned"]) - len(normalized["failed_indices"]), 0),
-                )
-            return normalized
-        return {
-            "weekly_hits": list(result),
-            "near_misses": [],
-            "failed_indices": [],
-            "total_scanned": None,
-            "scanned_indices": None,
-            "scan_date": None,
-            "is_friday": True,
-        }
-
-    @staticmethod
-    def _normalize_daily_scan(result):
-        """Accept a detailed daily scan or the historical list-only result."""
-        if result is None:
-            return {"setups": [], "total_indices": None, "scanned_indices": None, "failed_indices": [], "status": "unknown"}
-        if isinstance(result, dict):
-            normalized = dict(result)
-            normalized["setups"] = list(result.get("setups") or [])
-            normalized["failed_indices"] = list(result.get("failed_indices") or [])
-            return normalized
-        return {"setups": list(result), "total_indices": None, "scanned_indices": None, "failed_indices": [], "status": "unknown"}
-
-    @staticmethod
-    def _fii_flow_summary(calc_res):
-        """Return honest 3-/5-session flow displays and the CIS availability caveat."""
-        flow_3d_value = calc_res.get("fii_stk_flow_3d")
-        flow_5d_value = calc_res.get("fii_stk_flow_5d")
-        flow_3d_complete = bool(calc_res.get("fii_stk_flow_3d_complete", True)) and flow_3d_value is not None
-        flow_5d_complete = bool(calc_res.get("fii_stk_flow_5d_complete", True)) and flow_5d_value is not None
-
-        def sample_count(key):
-            if key not in calc_res:
-                return None
-            try:
-                return max(0, int(calc_res[key]))
-            except (TypeError, ValueError):
-                return None
-
-        sample_3d = sample_count("fii_stk_flow_3d_sample_days")
-        sample_5d = sample_count("fii_stk_flow_5d_sample_days")
-
-        def display(value, complete, sample, required, unit=""):
-            if complete:
-                suffix = f" {unit}" if unit else ""
-                return f"{int(value):+,}{suffix}"
-            if sample is None:
-                return "N/A (sample count not recorded)"
-            return f"N/A (only {sample}/{required} daily changes)"
-
-        flow_3d_display = display(flow_3d_value, flow_3d_complete, sample_3d, 3, "contracts")
-        flow_5d_display = display(flow_5d_value, flow_5d_complete, sample_5d, 5, "contracts")
-        if flow_3d_complete and flow_5d_complete:
-            cis_note = ""
-        else:
-            if flow_3d_complete:
-                impact = (
-                    "The complete 3-day tier remains eligible for CIS; the incomplete 5-day tier is omitted."
-                )
-            else:
-                impact = (
-                    "The incomplete stock-flow thrust is omitted from CIS; other available CIS factors remain scored."
-                )
-            cis_note = (
-                f"FII stock-flow history is incomplete (3-day: {flow_3d_display}; 5-day: {flow_5d_display}). "
-                f"Missing changes are not extrapolated. {impact} The resulting CIS-based live signal can differ "
-                "from earlier runs that extrapolated incomplete windows."
-            )
-
-        def description(value, complete, sample, required):
-            if not complete:
-                if sample is None:
-                    return "History availability not recorded"
-                return f"Insufficient history ({sample}/{required} daily changes)"
-            if value > 0:
-                return "Institutional Stock Accumulation"
-            if value < 0:
-                return "Institutional Stock Distribution"
-            return "No net change"
-
-        return {
-            "flow_3d_complete": flow_3d_complete,
-            "flow_5d_complete": flow_5d_complete,
-            "flow_3d_value": flow_3d_value,
-            "flow_5d_value": flow_5d_value,
-            "flow_3d_display": flow_3d_display,
-            "flow_5d_display": flow_5d_display,
-            "flow_3d_description": description(flow_3d_value, flow_3d_complete, sample_3d, 3),
-            "flow_5d_description": description(flow_5d_value, flow_5d_complete, sample_5d, 5),
-            "cis_note": cis_note,
-        }
-
-    @staticmethod
-    def _daily_coverage_text(scan):
-        total, scanned = scan.get("total_indices"), scan.get("scanned_indices")
-        failed = scan.get("failed_indices", [])
-        if total is None or scanned is None:
-            return "feed coverage not recorded"
-        if int(scanned) == 0:
-            result = f"NO CONCLUSION — 0/{int(total)} feeds usable"
-        elif failed:
-            result = f"PARTIAL — {int(scanned)}/{int(total)} feeds usable; {len(failed)} failed"
-        else:
-            result = f"FULL — {int(scanned)}/{int(total)} feeds usable"
-        if failed:
-            result += "; failed: " + ", ".join(str(name).replace("|", "\\|") for name in failed)
-        return result
-
-    @staticmethod
-    def _daily_coverage_html(scan):
-        total, scanned = scan.get("total_indices"), scan.get("scanned_indices")
-        failed = scan.get("failed_indices", [])
-        if total is None or scanned is None:
-            result = "Daily index-feed coverage was not recorded by this scan."
-        elif int(scanned) == 0:
-            result = f"⚠️ No conclusion: 0/{int(total)} daily index feeds returned valid, recent history."
-        elif failed:
-            result = f"⚠️ Partial daily scan: {int(scanned)}/{int(total)} feeds usable; {len(failed)} failed."
-        else:
-            result = f"✅ Full daily scan: {int(scanned)}/{int(total)} feeds usable."
-        if failed:
-            names = ", ".join(escape(str(name)) for name in failed[:8])
-            if len(failed) > 8:
-                names += f" and {len(failed) - 8} more"
-            result += f" Failed feeds: {names}."
-        return result
-
-    @staticmethod
-    def _sector_coverage_text(sector_res):
-        coverage = (sector_res or {}).get("feed_coverage")
-        if not coverage:
-            return ""
-        total = coverage.get("total_indices")
-        scanned = coverage.get("scanned_indices")
-        status = coverage.get("status", "unknown")
-        if total is None or scanned is None:
-            summary = "Sector index-feed coverage was not recorded."
-        elif status == "unavailable" or int(scanned) == 0:
-            summary = f"NO CONCLUSION — 0/{int(total)} sector histories usable."
-        elif status == "partial":
-            summary = f"PARTIAL — {int(scanned)}/{int(total)} sector histories usable."
-        else:
-            summary = f"FULL — {int(scanned)}/{int(total)} sector histories usable."
-        failed = coverage.get("failed_indices", [])
-        if failed:
-            names = ", ".join(str(name).replace("|", "\\|") for name in failed[:8])
-            if len(failed) > 8:
-                names += f" and {len(failed) - 8} more"
-            summary += f" Failed sectors: {names}."
-        details = coverage.get("errors", [])
-        if details:
-            messages = [
-                f"{row.get('name', 'feed')}: {row.get('reason', 'unavailable')}"
-                for row in details[:3] if isinstance(row, dict)
-            ]
-            if messages:
-                summary += " Feed details: " + "; ".join(messages)
-                if len(details) > 3:
-                    summary += f"; and {len(details) - 3} more"
-                summary += "."
-        return summary
-
-    def _scenario_section_html(self, scenario_res):
-        if not scenario_res or not scenario_res.get("available"):
-            reason = (scenario_res or {}).get("error", "Live NIFTY/VIX history was not available.")
-            snapshot = (scenario_res or {}).get("model_snapshot_as_of")
-            snapshot_note = f" Model reference snapshot: {escape(str(snapshot))}." if snapshot else ""
-            return f"""
-            <div class="card" id="nifty-scenario-overlay" style="border:1px solid #F59E0B;">
-                <h2 style="margin-top:0;color:#FBBF24">🧭 NIFTY SCENARIO LAB — 1–3 MONTH CONTEXT</h2>
-                <div style="color:#CBD5E1">Scenario overlay unavailable: {escape(str(reason))}.{snapshot_note}</div>
-                <div style="color:#94A3B8;font-size:12px;margin-top:8px">The core Smart Money 10–40 day report is unaffected. No old embedded forecast is substituted for missing live data.</div>
-            </div>
-            """
-
-        inputs = scenario_res.get("inputs", {})
-        probs = scenario_res.get("probabilities", {})
-        confidence = scenario_res.get("confidence_bucket", {})
-        accuracy = scenario_res.get("accuracy", {})
-        composite = scenario_res.get("composite", {})
-        metric_specs = [
-            ("y_up_1M", "NIFTY higher in 1 month", "#38BDF8"),
-            ("y_up_3M", "NIFTY higher in 3 months", "#A78BFA"),
-            ("y_dip5_3M", "3M risk of 5%+ dip", "#F87171"),
-            ("y_rally5_3M", "3M chance of 5%+ rally", "#34D399"),
-        ]
-        metric_cards = ""
-        for key, label, color in metric_specs:
-            record = probs.get(key, {})
-            probability = record.get("calibrated")
-            metric_cards += f"""
-            <div style="background:#030712;border:1px solid #1E293B;border-radius:10px;padding:13px;min-width:160px;flex:1">
-                <div style="font-size:11px;color:#94A3B8;text-transform:uppercase;font-weight:700">{label}</div>
-                <div style="font-size:25px;font-weight:900;color:{color};margin:4px 0">{_format_probability(probability) if probability is not None else '—'}</div>
-                <div style="font-size:11px;color:#94A3B8">Historical base rate: {_format_pct(record.get('base_rate_pct'))}</div>
-            </div>
-            """
-
-        input_values = [
-            ("NIFTY 50", f"{float(inputs.get('nifty', 0)):,.2f}"),
-            ("India VIX", f"{float(inputs.get('india_vix', 0)):.2f} ({float(inputs.get('india_vix_pct', 0)):.1f}th pct)"),
-            ("US VIX (1-session lag)", f"{float(inputs.get('us_vix', 0)):.2f} ({float(inputs.get('us_vix_pct', 0)):.1f}th pct)"),
-            ("RSI-14", f"{float(inputs.get('rsi14', 0)):.1f}"),
-            ("Distance from 200 EMA", _format_pct(inputs.get("dist200"), signed=True)),
-            ("Drawdown from 52-week high", _format_pct(inputs.get("dd252"), signed=True)),
-            ("Distance above 6-month low", _format_pct(inputs.get("dist6mlow"), signed=True)),
-            ("Bullish strength atoms", f"{int(inputs.get('bull_count', 0))}/7"),
-        ]
-        input_cells = "".join(
-            f'<div style="padding:7px 10px;background:#030712;border-radius:7px;color:#CBD5E1"><span style="color:#94A3B8">{escape(label)}:</span> <strong>{escape(value)}</strong></div>'
-            for label, value in input_values
-        )
-
-        scenario_cards = ""
-        for row in scenario_res.get("matched_scenarios", []):
-            one_month = row.get("one_month", {})
-            three_month = row.get("three_month", {})
-            historical_action = row.get("historical_action", "")
-            scenario_cards += f"""
-            <div style="background:#030712;border:1px solid #1E293B;border-left:3px solid #A78BFA;border-radius:9px;padding:13px;margin:9px 0">
-                <div style="font-weight:800;color:#F8FAFC">{escape(str(row.get('name', row.get('key', 'Scenario'))))}</div>
-                <div style="font-size:12px;color:#94A3B8;margin:4px 0">{escape(str(row.get('meaning', '')))}</div>
-                <div style="font-size:12px;color:#CBD5E1">1M median {_format_pct(one_month.get('med'), signed=True)} / historically up {_format_pct(one_month.get('up%'))} · 3M median {_format_pct(three_month.get('med'), signed=True)} / historically up {_format_pct(three_month.get('up%'))} · 3M observations n={int(three_month.get('n', 0))}</div>
-                <div style="font-size:11px;color:#94A3B8;margin-top:3px">Rule: {escape(str(row.get('rule', '')))}</div>
-                {f'<div style="font-size:11px;color:#FBBF24;margin-top:4px">Source playbook context (historical, not a current instruction): {escape(str(historical_action))}</div>' if historical_action else ''}
-            </div>
-            """
-        if not scenario_cards:
-            scenario_cards = '<div style="color:#94A3B8;padding:10px 0">No named historical scenario matched the latest feature set.</div>'
-
-        forecast_rows = ""
-        if composite:
-            forecast_rows = f"""
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;margin-top:10px">
-                <div style="background:#030712;padding:12px;border-radius:8px;color:#CBD5E1">1M blended median context<br><strong style="color:#38BDF8">{_format_pct(composite.get('one_month_median_pct'), signed=True)} → {float(composite.get('one_month_level', 0)):,.0f}</strong></div>
-                <div style="background:#030712;padding:12px;border-radius:8px;color:#CBD5E1">3M blended median context<br><strong style="color:#A78BFA">{_format_pct(composite.get('three_month_median_pct'), signed=True)} → {float(composite.get('three_month_level', 0)):,.0f}</strong></div>
-                <div style="background:#030712;padding:12px;border-radius:8px;color:#CBD5E1">Matched-scenario typical 3M dip<br><strong style="color:#F87171">{_format_pct(composite.get('typical_dip_3m_pct'), signed=True)}{f' → {float(composite["typical_dip_level"]):,.0f}' if composite.get('typical_dip_level') is not None else ''}</strong></div>
-                <div style="background:#030712;padding:12px;border-radius:8px;color:#CBD5E1">Matched-scenario typical 3M rally<br><strong style="color:#34D399">{_format_pct(composite.get('typical_rally_3m_pct'), signed=True)}{f' → {float(composite["typical_rally_level"]):,.0f}' if composite.get('typical_rally_level') is not None else ''}</strong></div>
-            </div>
-            <div style="font-size:11px;color:#64748B;margin-top:6px">Estimate method: {escape(str(composite.get('estimate_method', 'model/scenario blend')))}. Illustrative context only, not a price target or stop level.</div>
-            """
-
-        bucket = confidence.get("bucket", "—")
-        q_count = confidence.get("n", "—")
-        snapshot = scenario_res.get("model_snapshot_as_of", "unknown")
-        as_of = scenario_res.get("as_of", "unknown")
-        direction_note = (
-            "Fixed historical walk-forward scorecard from the supplied model data "
-            f"({escape(str(accuracy.get('oos_window', '')))}; not recalculated or retrained each run): "
-            f"NIFTY 1M direction {accuracy.get('nifty_dir_1M', '—')}% vs {accuracy.get('nifty_base_1M', '—')}% base rate "
-            f"(AUC {accuracy.get('dir1M_auc', '—')}); 3M direction {accuracy.get('nifty_dir_3M', '—')}% "
-            f"vs {accuracy.get('nifty_base_3M', '—')}% base rate (AUC {accuracy.get('dir3M_auc', '—')}). "
-            "The live calibrated probability cards above are recalculated from fresh market inputs."
-        )
-        calibration_note = escape(str(accuracy.get("calibration_note", "")))
-        return f"""
-        <div class="card" id="nifty-scenario-overlay" style="border:1px solid #7C3AED;box-shadow:0 0 18px rgba(124,58,237,.12)">
-            <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
-                <div>
-                    <h2 style="margin:0;color:#C4B5FD">🧭 NIFTY SCENARIO LAB — 1–3 MONTH MARKET CONTEXT</h2>
-                    <div style="color:#94A3B8;font-size:12px;margin-top:4px">Fresh market inputs as of {escape(str(as_of))} · Model/statistics snapshot {escape(str(snapshot))}</div>
-                </div>
-                <span style="background:#2E1065;color:#DDD6FE;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700">SECONDARY OVERLAY</span>
-            </div>
-            <div style="color:#CBD5E1;font-size:12px;margin:12px 0">One month is the closest horizon to the core 10–40 trading-day objective; three months is broad regime context. This overlay does not override participant-OI/CIS, the capital regime, sector leadership, or entry/stop rules.</div>
-            <div style="display:flex;flex-wrap:wrap;gap:9px">{metric_cards}</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:7px;margin-top:12px">{input_cells}</div>
-            <div style="background:#111827;border:1px solid #334155;border-radius:8px;padding:11px;margin-top:12px;color:#CBD5E1;font-size:12px">
-                Raw 3M model score is in <strong style="color:#C4B5FD">Q{bucket}/5</strong>; historical 3M bucket accuracy {_format_pct(confidence.get('accuracy%'))} (n={q_count}). Bucket samples are small and are not a guarantee.
-                <div style="margin-top:4px">{direction_note}</div>
-                <div style="color:#94A3B8;margin-top:4px">{calibration_note}</div>
-            </div>
-            <h3 style="color:#E2E8F0;margin:17px 0 6px">Matched historical scenarios</h3>
-            {scenario_cards}
-            <h3 style="color:#E2E8F0;margin:17px 0 6px">Scenario-based level context</h3>
-            {forecast_rows or '<div style="color:#94A3B8">No level estimate is available for this run.</div>'}
-            <div style="font-size:11px;color:#64748B;margin-top:12px">Research only, not investment advice. Scenario samples can overlap; direction hit-rates are at or below their reported base rates. No forecast is a substitute for capital preservation.</div>
-        </div>
-        """
-
-    @staticmethod
-    def _weekly_coverage_text(scan):
-        total = scan.get("total_scanned")
-        scanned = scan.get("scanned_indices")
-        failed = scan.get("failed_indices", [])
-        if scanned is None and total is not None:
-            scanned = max(int(total) - len(failed), 0)
-        if total is None:
-            coverage = "index-feed coverage not recorded"
-        elif not scanned:
-            coverage = f"NO CONCLUSION — 0/{int(total)} feeds usable"
-        elif failed:
-            coverage = f"PARTIAL — {int(scanned)}/{int(total)} feeds usable; {len(failed)} failed"
-        else:
-            coverage = f"FULL — {int(scanned)}/{int(total)} feeds usable"
-        failed_names = ", ".join(str(name).replace("|", "\\|") for name in failed)
-        if failed_names:
-            coverage += f"; failed indices: {failed_names}"
-        return coverage
-
-    @staticmethod
-    def _weekly_coverage_html(scan):
-        total = scan.get("total_scanned")
-        scanned = scan.get("scanned_indices")
-        failed = scan.get("failed_indices", [])
-        if scanned is None and total is not None:
-            scanned = max(int(total) - len(failed), 0)
-        if total is None:
-            coverage = "Index-feed coverage was not recorded by this scan."
-        elif not scanned:
-            coverage = f"⚠️ No conclusion: 0/{int(total)} index feeds returned usable weekly history."
-        elif failed:
-            coverage = f"⚠️ Partial scan: {int(scanned)}/{int(total)} feeds usable; {len(failed)} feed(s) failed."
-        else:
-            coverage = f"✅ Full scan: {int(scanned)}/{int(total)} index feeds usable."
-        failed_names = ", ".join(escape(str(name)) for name in failed[:8])
-        if len(failed) > 8:
-            failed_names += f" and {len(failed) - 8} more"
-        if failed_names:
-            coverage += f" Failed feeds: {failed_names}."
-        return coverage
-
-    @staticmethod
-    def _weekly_near_misses_html(scan):
-        near = scan.get("near_misses", [])
-        if not near:
-            return ""
-        rows = "".join(
-            f"<tr><td style='padding:7px'>{escape(str(row.get('name', 'Index')))}</td>"
-            f"<td style='padding:7px'>{row.get('score', 0)}/100</td>"
-            f"<td style='padding:7px'>{row.get('wick_pct', 0):.1f}%</td>"
-            f"<td style='padding:7px'>{row.get('close_in_range_pct', 0):.1f}%</td>"
-            f"<td style='padding:7px'>{escape(', '.join(row.get('confluences', [])[:2]))}</td></tr>"
-            for row in near[:6]
-        )
-        return f"""
-        <div style="margin-top:14px;color:#CBD5E1;font-size:12px"><strong>Near-misses:</strong> {len(near)} index sweep(s) failed one or more quality gates; highest-scoring candidates:</div>
-        <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;color:#CBD5E1;font-size:12px;margin-top:5px">
-            <thead><tr style="background:#1E293B;color:#94A3B8"><th>INDEX</th><th>SCORE</th><th>WICK</th><th>CLOSE IN RANGE</th><th>OBSERVED CONFLUENCE</th></tr></thead><tbody>{rows}</tbody>
-        </table></div>
-        """
-
-    def generate_html_report(self, calc_res, regime_res, sector_res, macro_res, daily_sweep_res=None, weekly_sweep_res=None, mtf_res=None, scenario_res=None):
+    def generate_html_report(self, calc_res, regime_res, sector_res, macro_res, daily_sweep_res=None, weekly_sweep_res=None, mtf_res=None):
         date_str = calc_res["date"]
         display_date = calc_res["display_date"]
         cis = calc_res["cis_score"]
         fii_ratio = calc_res["fii_long_ratio"]
-        flow_summary = self._fii_flow_summary(calc_res)
-        fii_stk_3d = flow_summary["flow_3d_value"]
-        fii_stk_5d = flow_summary["flow_5d_value"]
-        flow_3d_complete = flow_summary["flow_3d_complete"]
-        flow_5d_complete = flow_summary["flow_5d_complete"]
-        flow_3d_display = flow_summary["flow_3d_display"]
-        flow_5d_display = flow_summary["flow_5d_display"]
-        flow_3d_color = (
-            "#10B981" if fii_stk_3d > 0 else "#EF4444" if fii_stk_3d < 0 else "#94A3B8"
-        ) if flow_3d_complete else "#94A3B8"
-        flow_5d_color = (
-            "#10B981" if fii_stk_5d > 0 else "#EF4444" if fii_stk_5d < 0 else "#94A3B8"
-        ) if flow_5d_complete else "#94A3B8"
-        flow_3d_description = flow_summary["flow_3d_description"]
-        flow_5d_description = flow_summary["flow_5d_description"]
-        cis_flow_note_html = (
-            '<div style="background:#451A03;border:1px solid #B45309;border-radius:8px;padding:11px 14px;'
-            'margin-top:14px;color:#FDE68A;font-size:12px">⚠️ '
-            + escape(flow_summary["cis_note"])
-            + '</div>'
-        ) if flow_summary["cis_note"] else ""
-        oi_age = calc_res.get("oi_age_days")
-        oi_source = escape(str(calc_res.get("oi_source", "not recorded")))
-        oi_status = escape(str(calc_res.get("oi_data_status", "not recorded")))
-        oi_quality_note = f"Participant OI: {oi_source} · {oi_status}" + (f" · {oi_age} day(s) old" if oi_age is not None else "")
-
+        fii_stk_3d = calc_res["fii_stk_flow_3d"]
+        
         regime_name = regime_res["regime_name"]
         regime_desc = regime_res["regime_desc"]
         signal = regime_res["primary_signal"]
@@ -417,48 +23,11 @@ class ReportGenerator:
         cash_pct = regime_res["cash_reserve_pct"]
         action_text = regime_res["action_instructions"]
         
-        daily_scan = self._normalize_daily_scan(daily_sweep_res)
-        daily_sweep_res = daily_scan["setups"]
-        daily_coverage_html = self._daily_coverage_html(daily_scan)
-        weekly_scan = self._normalize_weekly_scan(weekly_sweep_res)
-        is_friday_report = weekly_scan is not None
-        weekly_hits = weekly_scan.get("weekly_hits", []) if weekly_scan else []
-        weekly_edition_label = (
-            "🗓️ Friday Edition" if weekly_scan and weekly_scan.get("is_friday", True)
-            else "🗓️ Manual Weekly Scan" if weekly_scan
-            else ""
-        )
+        daily_sweep_res = daily_sweep_res or []
+        is_friday_report = weekly_sweep_res is not None
         mtf_res = mtf_res or {"has_signals": False, "actionable": [], "triggered": []}
-        scenario_section_html = self._scenario_section_html(scenario_res)
-        sector_coverage_text = self._sector_coverage_text(sector_res)
-        sector_coverage_html = (
-            f'<div style="color:#FBBF24;font-size:11px;margin:0 0 12px">{escape(sector_coverage_text)}</div>'
-            if sector_coverage_text else ""
-        )
-        mtf_feed_note_html = ""
-        if mtf_res.get("status") in {"partial", "unavailable"}:
-            errors = mtf_res.get("errors", [])
-            error_details = []
-            for row in errors[:5]:
-                if not isinstance(row, dict):
-                    continue
-                label = str(row.get("name", "index"))
-                if row.get("timeframe"):
-                    label += f" ({row['timeframe']})"
-                if row.get("reason"):
-                    label += f": {row['reason']}"
-                error_details.append(escape(label))
-            extra = f" Feed issues: {'; '.join(error_details)}" if error_details else ""
-            if len(errors) > 5:
-                extra += f"; and {len(errors) - 5} more" if extra else f" Feed issues: {len(errors)} recorded"
-            mtf_feed_note_html = (
-                f'<div style="color:#FBBF24;font-size:11px;margin:-8px 0 16px">'
-                f"MTF scan status: {escape(str(mtf_res.get('status')))}; daily index history coverage "
-                f"{mtf_res.get('scanned_indices', 0)}/{mtf_res.get('total_indices', 0)}. "
-                f"An empty signal list is not a no-signal conclusion.{extra}</div>"
-            )
 
-        # Signal-only MTF setup card is suppressed when no trap/MSS exists; feed health remains visible.
+        # Signal-only MTF section: suppressed completely when no index trap/MSS exists.
         mtf_section_html = ""
         if mtf_res.get("has_signals"):
             mtf_rows = ""
@@ -578,15 +147,9 @@ class ReportGenerator:
                 </div>
                 """
         else:
-            if daily_scan.get("scanned_indices") == 0:
-                daily_empty_message = "No conclusion: zero daily index feeds returned valid recent history; check the failed-feed list."
-            elif daily_scan.get("failed_indices"):
-                daily_empty_message = "No qualifying setup among the available feeds; the daily scan was partial."
-            else:
-                daily_empty_message = "No active daily liquidity sweep setups triggered in the scanned index feeds."
-            daily_sweep_cards_html = f"""
+            daily_sweep_cards_html = """
             <div style="background: #030712; border: 1px solid #1E293B; border-radius: 12px; padding: 20px; text-align: center; color: #94A3B8;">
-                ⚡ {daily_empty_message}
+                ⚡ No active daily liquidity sweep setups triggered today. Market trading in standard trend continuation.
             </div>
             """
 
@@ -594,10 +157,8 @@ class ReportGenerator:
         weekly_section_html = ""
         if is_friday_report:
             weekly_cards_html = ""
-            weekly_coverage_html = self._weekly_coverage_html(weekly_scan)
-            weekly_near_misses_html = self._weekly_near_misses_html(weekly_scan)
-            if weekly_hits:
-                for wk_hit in weekly_hits:
+            if weekly_sweep_res:
+                for wk_hit in weekly_sweep_res:
                     w_score = wk_hit.get("score", 0)
                     w_grade = wk_hit.get("tier_badge", "WEEKLY SWEEP")
                     w_cp = wk_hit.get("current_price", 0.0)
@@ -627,7 +188,7 @@ class ReportGenerator:
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
                             <div>
                                 <span style="color: #F8FAFC; font-weight: 800; font-size: 16px;">{wk_hit['name']}</span>
-                                <span style="color: #64748B; font-size: 12px; margin-left: 6px;">({wk_hit.get('category', 'Index')} · {wk_hit.get('data_source', 'index history')})</span>
+                                <span style="color: #64748B; font-size: 12px; margin-left: 6px;">({wk_hit.get('category', 'Index')})</span>
                             </div>
                             <div>
                                 <span style="{w_badge_style} padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 12px;">
@@ -654,38 +215,27 @@ class ReportGenerator:
                     </div>
                     """
             else:
-                scanned = weekly_scan.get("scanned_indices")
-                if scanned is None:
-                    scanned = weekly_scan.get("total_scanned", 0)
-                if int(scanned or 0) == 0:
-                    empty_message = "⚠️ No conclusion: the weekly engine could not evaluate any index because usable history was unavailable."
-                elif weekly_scan.get("failed_indices"):
-                    empty_message = "⚠️ No qualifying setup in the feeds that were available; this was a partial scan, not an all-clear."
-                else:
-                    empty_message = "No qualifying multi-week liquidity sweep was detected in the completed weekly candles."
-                weekly_cards_html = f"""
-                <div style="background: #030712; border: 1px solid #1E293B; border-radius: 12px; padding: 18px; text-align: center; color: #CBD5E1;">
-                    ⚡ {empty_message}
+                weekly_cards_html = """
+                <div style="background: #030712; border: 1px solid #1E293B; border-radius: 12px; padding: 20px; text-align: center; color: #94A3B8;">
+                    ⚡ No multi-week fractal liquidity sweeps triggered this week across NSE indices. Standard weekly trend intact.
                 </div>
                 """
                 
             weekly_section_html = f"""
-            <!-- WEEKLY INDEX LIQUIDITY SWEEP RADAR -->
+            <!-- FRIDAY SPECIAL: WEEKLY INDEX LIQUIDITY SWEEP RADAR -->
             <div class="card" style="border: 1px solid #8B5CF6; box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
                     <h2 style="margin: 0; font-size: 20px; color: #A78BFA; display: flex; align-items: center; gap: 8px;">
-                        🗓️ NSE INDEX WEEKLY LIQUIDITY SWEEP RADAR
+                        🗓️ FRIDAY SPECIAL: NSE INDEX WEEKLY LIQUIDITY SWEEP RADAR
                     </h2>
                     <span style="background: rgba(139, 92, 246, 0.2); color: #C4B5FD; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase;">
                         Multi-Week Positional Horizon (2-6 Weeks)
                     </span>
                 </div>
-                <div style="color: #94A3B8; font-size: 13px; margin-bottom: 10px;">
-                    Completed weekly candles only. Fractal, 26W / 52W liquidity-pool sweeps are reported for 2–6 week positional context; individual stocks are never scanned.
+                <div style="color: #94A3B8; font-size: 13px; margin-bottom: 16px;">
+                    Weekly Fractal Liquidity Sweeps, 26W / 52W Low Absorption Hammers, and Weekly Trend Reversals across all NSE Broad Market, Sectoral & Thematic Indices. <em>(Delivered weekly on Friday EOD)</em>.
                 </div>
-                <div style="font-size:12px;margin-bottom:12px;color:#CBD5E1">Scan date: {escape(str(weekly_scan.get('scan_date') or 'not recorded'))} · {weekly_coverage_html}</div>
                 {weekly_cards_html}
-                {weekly_near_misses_html}
             </div>
             """
         else:
@@ -712,7 +262,7 @@ class ReportGenerator:
                 n_action = r["net_action"]
                 c_today = f"{r['carried_t0']:,}"
                 c_1d = f"{r['carried_t1']:,}"
-                c_2d = "N/A" if r.get("carried_t2") is None else f"{r['carried_t2']:,}"
+                c_2d = f"{r['carried_t2']:,}"
                 
                 net_color = "#10B981" if r["sentiment"] == "BULLISH" else "#EF4444" if r["sentiment"] == "BEARISH" else "#94A3B8"
                 car_color = "#10B981" if r["carried_sentiment"] == "BULLISH" else "#EF4444" if r["carried_sentiment"] == "BEARISH" else "#94A3B8"
@@ -742,8 +292,8 @@ class ReportGenerator:
                             <th style="padding: 10px 12px;">Short Delta</th>
                             <th style="padding: 10px 12px;">Net Today</th>
                             <th style="padding: 10px 12px;">Carried (Today)</th>
-                            <th style="padding: 10px 12px;">1 Session Ago</th>
-                            <th style="padding: 10px 12px;">2 Sessions Ago</th>
+                            <th style="padding: 10px 12px;">1 Day Ago</th>
+                            <th style="padding: 10px 12px;">2 Days Ago</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -776,27 +326,14 @@ class ReportGenerator:
                 ("Nifty 50 Index", macro_res.get("nifty_50", {}), "pts", "Domestic Benchmark"),
             ]
             for label, data, unit, note in m_items:
-                try:
-                    px = float(data.get("current"))
-                    price_ok = px > 0 and px == px and abs(px) != float("inf")
-                except (TypeError, ValueError):
-                    px, price_ok = None, False
-                try:
-                    chg = float(data.get("change_pct"))
-                    change_ok = chg == chg and abs(chg) != float("inf")
-                except (TypeError, ValueError):
-                    chg, change_ok = None, False
-                chg_c = "#10B981" if change_ok and chg >= 0 else "#EF4444" if change_ok else "#64748B"
-                status = str(data.get("status", "ok" if price_ok else "unavailable"))
-                as_of = data.get("as_of")
-                meta = f"{escape(str(data.get('symbol', '')))}" + (f" · {escape(str(as_of))}" if as_of else "")
-                change_text = f"{chg:+.2f}%" if change_ok else "Change unavailable"
+                chg = data.get("change_pct", 0)
+                px = data.get("current", 0)
+                chg_c = "#10B981" if chg >= 0 else "#EF4444"
                 macro_cards_html += f"""
                 <div style="background: #0F172A; border: 1px solid #1E293B; border-radius: 10px; padding: 12px 16px; flex: 1; min-width: 140px;">
                     <div style="color: #94A3B8; font-size: 12px; font-weight: 600;">{label}</div>
-                    <div style="color: #F8FAFC; font-size: 18px; font-weight: 800; margin: 4px 0;">{f'{px:,.2f}' if price_ok else 'Unavailable'} <span style="font-size: 12px; color: #64748B;">{unit if price_ok else ''}</span></div>
-                    <div style="font-size: 12px; font-weight: 700; color: {chg_c};">{change_text} <span style="font-size: 11px; color: #64748B; font-weight: 400;">({note})</span></div>
-                    <div style="font-size:10px;color:#64748B;margin-top:3px">{escape(status)} · {meta}</div>
+                    <div style="color: #F8FAFC; font-size: 18px; font-weight: 800; margin: 4px 0;">{px:,.2f} <span style="font-size: 12px; color: #64748B;">{unit}</span></div>
+                    <div style="font-size: 12px; font-weight: 700; color: {chg_c};">{chg:+.2f}% <span style="font-size: 11px; color: #64748B; font-weight: 400;">({note})</span></div>
                 </div>
                 """
 
@@ -846,7 +383,7 @@ class ReportGenerator:
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
                 <div>
                     <span style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase;">
-                        Institutional Intelligence Report {'• ' + weekly_edition_label if weekly_edition_label else ''}
+                        Institutional Intelligence Report {'• 🗓️ Friday Edition' if is_friday_report else ''}
                     </span>
                     <h1 style="margin: 8px 0 4px 0; font-size: 28px; font-weight: 900; color: #FFFFFF;">
                         Smart Money Daily Market Prediction
@@ -854,7 +391,6 @@ class ReportGenerator:
                     <div style="color: #94A3B8; font-size: 14px;">
                         Date: <strong style="color: #E2E8F0;">{display_date}</strong> | Official NSE Participant Open Interest & Quantitative Analytics
                     </div>
-                    <div style="color:#64748B;font-size:11px;margin-top:3px">{oi_quality_note}</div>
                 </div>
                 <div>
                     <div class="btn-badge" style="background: {signal_color}; color: #FFFFFF; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">
@@ -898,25 +434,14 @@ class ReportGenerator:
 
                 <div style="background: #030712; border: 1px solid #1E293B; border-radius: 12px; padding: 16px;">
                     <div style="color: #94A3B8; font-size: 12px; font-weight: 600; text-transform: uppercase;">FII 3-Day Stock Flow</div>
-                    <div style="font-size: 24px; font-weight: 900; color: {flow_3d_color}; margin: 6px 0;">
-                        {flow_3d_display}
+                    <div style="font-size: 24px; font-weight: 900; color: {'#10B981' if fii_stk_3d > 0 else '#EF4444'}; margin: 6px 0;">
+                        {fii_stk_3d:+,}
                     </div>
                     <div style="color: #94A3B8; font-size: 12px;">
-                        {flow_3d_description}
-                    </div>
-                </div>
-
-                <div style="background: #030712; border: 1px solid #1E293B; border-radius: 12px; padding: 16px;">
-                    <div style="color: #94A3B8; font-size: 12px; font-weight: 600; text-transform: uppercase;">FII 5-Day Stock Flow</div>
-                    <div style="font-size: 24px; font-weight: 900; color: {flow_5d_color}; margin: 6px 0;">
-                        {flow_5d_display}
-                    </div>
-                    <div style="color: #94A3B8; font-size: 12px;">
-                        {flow_5d_description}
+                        {'Institutional Stock Accumulation' if fii_stk_3d > 0 else 'Institutional Stock Distribution'}
                     </div>
                 </div>
             </div>
-            {cis_flow_note_html}
         </div>
 
         <!-- ACTIONABLE SWING STRATEGY & NIFTY TRAJECTORY -->
@@ -953,12 +478,9 @@ class ReportGenerator:
             </div>
         </div>
 
-        {scenario_section_html}
-
         {weekly_section_html}
 
         {mtf_section_html}
-        {mtf_feed_note_html}
 
         <!-- DAILY NSE INDEX LIQUIDITY SWEEP & CONFLUENCE RADAR -->
         <div class="card">
@@ -968,7 +490,6 @@ class ReportGenerator:
             <div style="color: #94A3B8; font-size: 13px; margin-bottom: 16px;">
                 Daily multi-confluence screening across Broad Market, Sectoral & Thematic NSE Indices detecting Stop-Loss Sweeps, Hammer Rejection Wicks, Bullish RSI Divergences, and Fair Value Gaps (FVGs). <em>(Runs every day)</em>.
             </div>
-            <div style="font-size:12px;margin-bottom:12px;color:#CBD5E1">Scan date: {escape(str(daily_scan.get('scan_date') or 'not recorded'))} · {daily_coverage_html}</div>
             {daily_sweep_cards_html}
         </div>
 
@@ -988,7 +509,6 @@ class ReportGenerator:
             <div style="color: #94A3B8; font-size: 13px; margin-bottom: 16px;">
                 {sector_res.get('rotation_summary', '')}
             </div>
-            {sector_coverage_html}
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
                     <thead>
@@ -1038,9 +558,6 @@ class ReportGenerator:
 </body>
 </html>
 """
-        # Generated inline HTML has no semantic need for trailing whitespace; remove it
-        # so saved reports remain clean under git diff --check as well as in email clients.
-        html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
         # Save HTML file
         out_html_path = os.path.join(self.output_dir, f"prediction_report_{date_str}.html")
         latest_html_path = os.path.join(self.output_dir, "latest_prediction_report.html")
@@ -1051,7 +568,7 @@ class ReportGenerator:
             f.write(html)
             
         # Also generate Markdown Report
-        md = self._generate_markdown(calc_res, regime_res, sector_res, macro_res, daily_scan, weekly_sweep_res, mtf_res, scenario_res)
+        md = self._generate_markdown(calc_res, regime_res, sector_res, macro_res, daily_sweep_res, weekly_sweep_res, mtf_res)
         out_md_path = os.path.join(self.output_dir, f"prediction_report_{date_str}.md")
         latest_md_path = os.path.join(self.output_dir, "latest_prediction_report.md")
         
@@ -1068,137 +585,23 @@ class ReportGenerator:
             "html_content": html
         }
 
-    def _scenario_section_markdown(self, scenario_res):
-        if not scenario_res or not scenario_res.get("available"):
-            reason = (scenario_res or {}).get("error", "Live NIFTY/VIX history was not available.")
-            return (
-                "\n---\n\n## 🧭 NIFTY Scenario Lab — 1–3 Month Context\n"
-                f"**Unavailable:** {reason}. No archived forecast was used as a live fallback. "
-                "The core Smart Money report is unaffected.\n"
-            )
-
-        probs = scenario_res.get("probabilities", {})
-        confidence = scenario_res.get("confidence_bucket", {})
-        accuracy = scenario_res.get("accuracy", {})
-        inputs = scenario_res.get("inputs", {})
-        composite = scenario_res.get("composite", {})
-        rows = [
-            ("NIFTY positive return, 1M", "y_up_1M"),
-            ("NIFTY positive return, 3M", "y_up_3M"),
-            ("5%+ drawdown within 3M", "y_dip5_3M"),
-            ("5%+ rally within 3M", "y_rally5_3M"),
-        ]
-        table = "| Outcome | Calibrated probability | Base rate | Walk-forward hit rate | AUC |\n| :--- | ---: | ---: | ---: | ---: |\n"
-        for label, key in rows:
-            record = probs.get(key, {})
-            auc = record.get("oos_auc")
-            table += (
-                f"| {label} | {_format_probability(record.get('calibrated', 0))} "
-                f"(raw {_format_probability(record.get('raw', 0))}) | "
-                f"{_format_pct(record.get('base_rate_pct'))} | "
-                f"{_format_pct(record.get('oos_hit_pct'))} | {auc if auc is not None else '—'} |\n"
-            )
-
-        matched_rows = ""
-        for row in scenario_res.get("matched_scenarios", []):
-            one, three = row.get("one_month", {}), row.get("three_month", {})
-            name = str(row.get("name", row.get("key", "Scenario"))).replace("|", "\\|")
-            rule = str(row.get("rule", "")).replace("|", "\\|")
-            matched_rows += (
-                f"| {name} | {row.get('events', '—')} | "
-                f"{_format_pct(one.get('med'), signed=True)} / {_format_pct(one.get('up%'))} | "
-                f"{_format_pct(three.get('med'), signed=True)} / {_format_pct(three.get('up%'))} | "
-                f"{_format_pct(row.get('typical_dip_3m_pct'), signed=True)} / "
-                f"{_format_pct(row.get('typical_rally_3m_pct'), signed=True)} | {rule} |\n"
-            )
-        if not matched_rows:
-            matched_rows = "| No named historical scenario matched | — | — | — | — | — |\n"
-
-        forecast_lines = ""
-        if composite:
-            forecast_lines = (
-                f"\n- **1M blend context:** {_format_pct(composite.get('one_month_median_pct'), signed=True)} "
-                f"→ approximately {float(composite.get('one_month_level', 0)):,.0f}.\n"
-                f"- **3M blend context:** {_format_pct(composite.get('three_month_median_pct'), signed=True)} "
-                f"→ approximately {float(composite.get('three_month_level', 0)):,.0f}.\n"
-            )
-            if composite.get("typical_dip_3m_pct") is not None:
-                forecast_lines += (
-                    f"- Matched-scenario typical 3M dip/rally: "
-                    f"{_format_pct(composite.get('typical_dip_3m_pct'), signed=True)} "
-                    f"(≈{float(composite['typical_dip_level']):,.0f}) / "
-                    f"{_format_pct(composite.get('typical_rally_3m_pct'), signed=True)} "
-                    f"(≈{float(composite['typical_rally_level']):,.0f}).\n"
-                )
-            forecast_lines += f"- Estimate method: {composite.get('estimate_method', 'model/scenario blend')}; context only, not a target.\n"
-
-        forecast_text = forecast_lines or "No level estimate is available for this run."
-        return f"""
----
-
-## 🧭 NIFTY Scenario Lab — 1–3 Month Market Context
-**Fresh inputs as of:** `{scenario_res.get('as_of', 'unknown')}` · **Model/statistics snapshot:** `{scenario_res.get('model_snapshot_as_of', 'unknown')}`
-
-{table}
-
-**Raw 3M confidence bucket:** Q{confidence.get('bucket', '—')}/5; historical bucket accuracy {_format_pct(confidence.get('accuracy%'))} (n={confidence.get('n', '—')}). This sample is small and is not a guarantee.
-
-**Inputs:** NIFTY {float(inputs.get('nifty', 0)):,.2f}; India VIX {float(inputs.get('india_vix', 0)):.2f} ({float(inputs.get('india_vix_pct', 0)):.1f}th percentile); US VIX {float(inputs.get('us_vix', 0)):.2f} ({float(inputs.get('us_vix_pct', 0)):.1f}th percentile, one-session lag); RSI-14 {float(inputs.get('rsi14', 0)):.1f}; distance from 200 EMA {_format_pct(inputs.get('dist200'), signed=True)}; 52-week-high drawdown {_format_pct(inputs.get('dd252'), signed=True)}; distance above 6-month low {_format_pct(inputs.get('dist6mlow'), signed=True)}; bullish atoms {inputs.get('bull_count', 0)}/7.
-
-### Matched historical scenarios
-| Scenario | Episodes | 1M median / up-rate | 3M median / up-rate | Typical 3M dip / rally | Rule |
-| :--- | ---: | ---: | ---: | ---: | :--- |
-{matched_rows}
-### Scenario level context
-{forecast_text}
-
-**Fixed historical scorecard from supplied model data (not recalculated or retrained each run):** NIFTY 1M direction {_format_pct(accuracy.get('nifty_dir_1M'))} vs {_format_pct(accuracy.get('nifty_base_1M'))} base rate (AUC {accuracy.get('dir1M_auc', '—')}); 3M direction {_format_pct(accuracy.get('nifty_dir_3M'))} vs {_format_pct(accuracy.get('nifty_base_3M'))} base rate (AUC {accuracy.get('dir3M_auc', '—')}). {accuracy.get('calibration_note', '')}
-
-**Live probabilities:** recalculated from this run's fresh NIFTY/VIX inputs; these are separate from the fixed historical scorecard.
-
-*Overlay only: 1M is the closest horizon to the core 10–40 trading-day objective; 3M is longer-term context. Do not replace the primary participant-OI/CIS regime, sector confluence, or entry/stop rules. Research only, not investment advice.*
-"""
-
-    def _generate_markdown(self, calc_res, regime_res, sector_res, macro_res, daily_sweep_res=None, weekly_sweep_res=None, mtf_res=None, scenario_res=None):
+    def _generate_markdown(self, calc_res, regime_res, sector_res, macro_res, daily_sweep_res=None, weekly_sweep_res=None, mtf_res=None):
         display_date = calc_res["display_date"]
         cis = calc_res["cis_score"]
         fii_ratio = calc_res["fii_long_ratio"]
-        flow_summary = self._fii_flow_summary(calc_res)
-        flow_3d_display = flow_summary["flow_3d_display"]
-        flow_5d_display = flow_summary["flow_5d_display"]
-        flow_cis_note_md = (
-            f"\n**FII flow/CIS caveat:** ⚠️ {flow_summary['cis_note']}\n"
-            if flow_summary["cis_note"] else ""
-        )
-        oi_source = str(calc_res.get("oi_source", "not recorded"))
-        oi_status = str(calc_res.get("oi_data_status", "not recorded"))
-        oi_age = calc_res.get("oi_age_days")
-        oi_quality_note = f"{oi_source} · {oi_status}" + (f" · {oi_age} day(s) old" if oi_age is not None else "")
+        fii_stk_3d = calc_res["fii_stk_flow_3d"]
         signal = regime_res["primary_signal"]
-        daily_scan = self._normalize_daily_scan(daily_sweep_res)
-        daily_sweep_res = daily_scan["setups"]
-        daily_coverage_text = self._daily_coverage_text(daily_scan)
-        sector_coverage_text = self._sector_coverage_text(sector_res)
-        weekly_scan = self._normalize_weekly_scan(weekly_sweep_res)
-        weekly_hits = weekly_scan.get("weekly_hits", []) if weekly_scan else []
-        is_friday_report = weekly_scan is not None
-        weekly_edition_label = (
-            "🗓️ Friday Edition" if weekly_scan and weekly_scan.get("is_friday", True)
-            else "🗓️ Manual Weekly Scan" if weekly_scan
-            else ""
-        )
+        daily_sweep_res = daily_sweep_res or []
+        is_friday_report = weekly_sweep_res is not None
         
-        md = f"""# 🏛️ Smart Money Institutional Prediction Report — {display_date} {'(' + weekly_edition_label + ')' if weekly_edition_label else ''}
+        md = f"""# 🏛️ Smart Money Institutional Prediction Report — {display_date} {'(🗓️ Friday Edition)' if is_friday_report else ''}
 
 **Primary Signal**: `{signal}`
 **Market Regime**: `{regime_res['regime_name']}`
 **Composite Score (CIS)**: `{cis:+.1f} / 10`
 **FII Index Long Ratio**: `{fii_ratio}%`
-**FII 3-Day Stock Futures Flow**: `{flow_3d_display}`
-**FII 5-Day Stock Futures Flow**: `{flow_5d_display}`
-**Participant OI data quality**: `{oi_quality_note}`
+**FII 3-Day Stock Futures Flow**: `{fii_stk_3d:+,} contracts`
 **Capital Allocation**: `{regime_res['capital_allocation_pct']}% Stocks | {regime_res['cash_reserve_pct']}% Cash`
-{flow_cis_note_md}
 
 ---
 
@@ -1215,7 +618,6 @@ class ReportGenerator:
 - **SL Sweep Zone (Liquidity Hunt)**: `{regime_res['sweep_zone']}`
 - **Support 2**: `{regime_res['support_2']}`
 """
-        md += self._scenario_section_markdown(scenario_res)
         mtf_res = mtf_res or {"has_signals": False, "actionable": []}
         if mtf_res.get("has_signals"):
             md += """
@@ -1229,72 +631,29 @@ class ReportGenerator:
 """
             for m in mtf_res.get("actionable", []):
                 md += f"| {m['name']} | {m.get('status','')} | {m.get('pwl','—')} | {m.get('week_low','—')} | {m.get('entry') or 'Waiting'} | {m.get('stoploss') or '—'} | {m.get('target_1') or '—'} | {m.get('target_2') or '—'} | {m.get('rr_t2') or '—'} |\n"
-        if mtf_res.get("status") in {"partial", "unavailable"}:
-            error_details = []
-            for row in mtf_res.get("errors", [])[:5]:
-                if not isinstance(row, dict):
-                    continue
-                label = str(row.get("name", "index"))
-                if row.get("timeframe"):
-                    label += f" ({row['timeframe']})"
-                if row.get("reason"):
-                    label += f": {row['reason']}"
-                error_details.append(label.replace("|", "\\|"))
-            extra = f" Feed issues: {'; '.join(error_details)}." if error_details else ""
-            if len(mtf_res.get("errors", [])) > 5:
-                extra += f" And {len(mtf_res['errors']) - 5} more."
-            md += (
-                f"\n**MTF scan status:** {mtf_res.get('status')}; daily index history coverage "
-                f"{mtf_res.get('scanned_indices', 0)}/{mtf_res.get('total_indices', 0)}. "
-                f"An empty signal list is not a no-signal conclusion.{extra}\n"
-            )
 
         if is_friday_report:
-            scan_date = weekly_scan.get("scan_date") or "not recorded"
-            md += f"""
+            md += """
 ---
 
-## 🗓️ NSE Index Weekly Liquidity Sweep Radar (2–6 Week Positional)
-Completed weekly candles only; the scheduled scan runs in the Friday 9:00 PM IST report. Individual stocks are never scanned.
-
-**Scan date:** `{scan_date}` · **Data coverage:** {self._weekly_coverage_text(weekly_scan)} · **Qualifying setups:** {len(weekly_hits)} · **Near-misses:** {len(weekly_scan.get('near_misses', []))}
+## 🗓️ FRIDAY SPECIAL: NSE Index Weekly Liquidity Sweep Radar (Multi-Week Positional)
+Weekly Fractal Liquidity Sweeps, 26W / 52W Low Absorption Hammers, and Weekly Trend Reversals across all NSE Broad Market, Sectoral & Thematic Indices *(Delivered every Friday)*.
 
 | Index Name | Category | Grade & Score | Weekly Close | Weekly Low | Swept Support | Wick % | Invalidation SL | Confluences |
-| :--- | :--- | :--- | ---: | ---: | ---: | ---: | ---: | :--- |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 """
-            if weekly_hits:
-                for wk in weekly_hits:
-                    w_confs = ", ".join(wk.get("confluences", [])[:2]).replace("|", "\\|")
+            if weekly_sweep_res:
+                for wk in weekly_sweep_res:
+                    w_confs = ", ".join(wk.get("confluences", [])[:2])
                     md += f"| {wk['name']} | {wk.get('category', 'Index')} | {wk.get('tier_badge', 'WEEKLY')} ({wk.get('score', 0)}/100) | {wk.get('current_price', 0):,.1f} | {wk.get('weekly_low', 0):,.1f} | {wk.get('swept_level', 0):,.1f} ({wk.get('pool_type', 'Low')}) | {wk.get('wick_pct', 0):.1f}% | {wk.get('stop_loss_level', 0):,.1f} | {w_confs} |\n"
             else:
-                scanned = weekly_scan.get("scanned_indices")
-                if scanned is None:
-                    scanned = weekly_scan.get("total_scanned", 0)
-                if int(scanned or 0) == 0:
-                    no_setup = "*No conclusion — zero index feeds were usable; check the failure list.*"
-                elif weekly_scan.get("failed_indices"):
-                    no_setup = "*No qualifying setup among available feeds; scan was partial.*"
-                else:
-                    no_setup = "*No qualifying weekly index sweep detected.*"
-                md += f"| {no_setup} | - | - | - | - | - | - | - | - |\n"
-
-            near_misses = weekly_scan.get("near_misses", [])
-            if near_misses:
-                md += "\n### Weekly near-misses (quality gate not met)\n\n| Index | Score | Wick | Close in range | Observed confluences |\n| :--- | ---: | ---: | ---: | :--- |\n"
-                for row in near_misses[:6]:
-                    name = str(row.get("name", "Index")).replace("|", "\\|")
-                    confluences = ", ".join(row.get("confluences", [])[:2]).replace("|", "\\|")
-                    md += f"| {name} | {row.get('score', 0)}/100 | {row.get('wick_pct', 0):.1f}% | {row.get('close_in_range_pct', 0):.1f}% | {confluences} |\n"
-        else:
-            md += "\n---\n\n## 🗓️ Weekly Index Sweep Radar\nRuns after the completed Friday weekly candle close and appears in the Friday report/email. `python src/main.py --weekly` can be used for a manual scan.\n"
+                md += "| *No multi-week index sweep triggers detected this week* | - | - | - | - | - | - | - | - |\n"
 
         md += f"""
 ---
 
 ## 🎯 NSE Index Daily Liquidity Sweep Radar (Daily Routine)
 Daily multi-confluence screening across Broad Market, Sectoral & Thematic NSE Indices detecting Stop-Loss Sweeps, Hammer Rejection Wicks, RSI Divergences, and FVGs.
-
-**Scan date:** `{daily_scan.get('scan_date', 'not recorded')}` · **Feed coverage:** {daily_coverage_text}
 
 | Index Name | Category | Grade & Score | Close | Day Low | Swept Support | Wick % | RSI Divergence | Confluences |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -1311,21 +670,13 @@ Daily multi-confluence screening across Broad Market, Sectoral & Thematic NSE In
             md += f"| {sw['name']} | {sw.get('category', 'Index')} | {grade} ({score}/100) | {cp:,.1f} | {dl:,.1f} | {sl:,.1f} | {wick_pct:.1f}% | {rsi_d} | {confs} |\n"
             
         if not daily_sweep_res:
-            if daily_scan.get("scanned_indices") == 0:
-                daily_empty_message = "No conclusion — zero feeds usable; inspect failures"
-            elif daily_scan.get("failed_indices"):
-                daily_empty_message = "No qualifying setup among available feeds; scan partial"
-            else:
-                daily_empty_message = "No active daily index sweep triggers in available feeds"
-            md += f"| *{daily_empty_message}* | - | - | - | - | - | - | - | - |\n"
+            md += "| *No active daily index sweep triggers detected today* | - | - | - | - | - | - | - | - |\n"
 
         md += f"""
 ---
 
 ## 🔄 Sector Rotation Ranking
 {sector_res.get('rotation_summary', '')}
-
-{sector_coverage_text}
 
 | Sector Name | 1-Week % | 1-Month % | 20 EMA Status | RS Score | Institutional Stance |
 | :--- | :--- | :--- | :--- | :--- | :--- |

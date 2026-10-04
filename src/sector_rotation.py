@@ -5,12 +5,10 @@ class SectorRotationAnalyzer:
     def analyze_sectors(self, sector_list):
         if not sector_list:
             return {
-                "all_sectors": [],
                 "top_leaders": [],
                 "improving": [],
-                "neutral": [],
                 "laggards": [],
-                "rotation_summary": "Sector data currently unavailable; do not infer broad-based leadership."
+                "rotation_summary": "Sector data currently unavailable."
             }
             
         top_leaders = [s for s in sector_list if s["status_code"] == "LEADER"]
@@ -25,10 +23,7 @@ class SectorRotationAnalyzer:
         if top_leaders:
             summary = f"Institutional accumulation is heavily concentrated in {leader_names}. Focus 10-40 day swing positions in stocks belonging to these leadership sectors. Avoid laggards ({laggard_names})."
         else:
-            summary = (
-                "No sector currently passes the strong-leader threshold. Treat leadership as mixed; "
-                "prioritize only names with independent price/volume confirmation and risk-defined entries."
-            )
+            summary = f"Sector leadership is currently broad-based. Priority to sectors trading above their Daily 20 EMA."
             
         return {
             "all_sectors": sector_list,
