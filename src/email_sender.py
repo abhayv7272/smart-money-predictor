@@ -1,6 +1,5 @@
 import os
 import smtplib
-import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -18,11 +17,11 @@ class EmailSender:
 
     def send_report(self, subject, html_content):
         if not self.smtp_user or not self.smtp_pass:
-            msg="SMTP credentials are not configured; report email was not sent."
+            msg="SMTP credentials are not configured; HTML report was saved locally."
             if os.environ.get("REQUIRE_EMAIL","").lower() in {"1","true","yes"}:
                 raise RuntimeError(msg)
             print(f"[INFO] {msg}")
-            print(f"[INFO] Recipient configured for future dispatch: {self.recipient_email}")
+            print(f"[INFO] Report is ready for automated dispatch to: {self.recipient_email}")
             return False
             
         try:
@@ -49,10 +48,8 @@ class EmailSender:
                 image.add_header("Content-Disposition","inline",filename=f"{cid}.png")
                 msg.attach(image)
             
-            with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=20) as server:
-                server.ehlo()
-                server.starttls(context=ssl.create_default_context())
-                server.ehlo()
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                server.starttls()
                 server.login(self.smtp_user, self.smtp_pass)
                 server.sendmail(self.sender_email, self.recipient_email, msg.as_string())
                 
