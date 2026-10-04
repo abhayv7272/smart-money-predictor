@@ -1,3 +1,4 @@
+import datetime as dt
 import os
 import sys
 import tempfile
@@ -7,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+from main import _price_for_completed_session
 from nifty_scenario_engine import NiftyScenarioEngine
 from report_generator import ReportGenerator
 from weekly_index_sweep_engine import WeeklyIndexSweepEngine
@@ -39,10 +41,35 @@ class NiftyScenarioEngineTests(unittest.TestCase):
         self.assertAlmostEqual(result["probabilities"]["y_up_3M"]["calibrated"], 0.8379, places=3)
         self.assertAlmostEqual(result["probabilities"]["y_dip5_3M"]["calibrated"], 0.3533, places=3)
         self.assertEqual(result["confidence_bucket"]["bucket"], 5)
+        self.assertEqual(result["accuracy"]["nifty_dir_1M"], 62.8)
+        self.assertEqual(result["accuracy"]["nifty_base_1M"], 64.1)
+        self.assertEqual(result["accuracy"]["nifty_dir_3M"], 62.8)
+        self.assertEqual(result["accuracy"]["nifty_base_3M"], 66.7)
+        self.assertEqual(result["probabilities"]["y_up_1M"]["oos_hit_pct"], 62.8)
+        self.assertEqual(result["probabilities"]["y_up_1M"]["base_rate_pct"], 64.1)
+        self.assertEqual(result["probabilities"]["y_up_3M"]["oos_hit_pct"], 62.8)
+        self.assertEqual(result["probabilities"]["y_up_3M"]["base_rate_pct"], 66.7)
         self.assertEqual(
             [row["key"] for row in result["matched_scenarios"]],
             ["slow_bleed", "deep_oversold_fear", "retest", "local_fear"],
         )
+
+        changed_inputs = dict(inputs, us_vix_pct=90.0, india_vix_pct=10.0)
+        fresh_result = self.engine.predict_from_inputs(changed_inputs)
+        self.assertNotEqual(
+            fresh_result["probabilities"]["y_up_1M"]["calibrated"],
+            result["probabilities"]["y_up_1M"]["calibrated"],
+        )
+        self.assertEqual(fresh_result["accuracy"], result["accuracy"])
+
+    def test_live_spot_is_rejected_unless_it_matches_latest_completed_nse_session(self):
+        expected = dt.date(2026, 10, 5)
+        self.assertEqual(
+            _price_for_completed_session(22422.0, "2026-10-05", expected),
+            22422.0,
+        )
+        self.assertIsNone(_price_for_completed_session(22422.0, "2026-10-01", expected))
+        self.assertIsNone(_price_for_completed_session(0, "2026-10-05", expected))
 
     def test_live_feature_builder_lags_us_vix_one_indian_session(self):
         idx = pd.bdate_range("2024-01-01", periods=320)
@@ -209,6 +236,14 @@ class ReportIntegrationTests(unittest.TestCase):
             self.assertIn("near-miss", lowered)
         self.assertIn("65.8%", html)
         self.assertIn("83.8%", markdown)
+        for document in (html, markdown):
+            lowered = document.lower()
+            self.assertIn("not recalculated or retrained each run", lowered)
+            self.assertIn("62.8%", document)
+            self.assertIn("64.1%", document)
+            self.assertIn("66.7%", document)
+        self.assertIn("Live probabilities", markdown)
+        self.assertIn("fresh market inputs", html)
         self.assertIn("No qualifying setup in the feeds that were available", html)
         self.assertIn("Partial daily scan", html)
         self.assertIn("MTF scan status: unavailable; daily index history coverage 0/19", html)
@@ -216,6 +251,23 @@ class ReportIntegrationTests(unittest.TestCase):
         self.assertIn("PARTIAL — 14/16 sector histories usable", html)
         self.assertIn("Yahoo timeout", markdown)
         self.assertIn("not a no-signal conclusion", markdown)
+
+    def test_partial_flow_disclosure_preserves_complete_three_day_tier(self):
+        summary = ReportGenerator._fii_flow_summary(
+            {
+                "fii_stk_flow_3d": 30000,
+                "fii_stk_flow_5d": None,
+                "fii_stk_flow_3d_complete": True,
+                "fii_stk_flow_5d_complete": False,
+                "fii_stk_flow_3d_sample_days": 3,
+                "fii_stk_flow_5d_sample_days": 4,
+            }
+        )
+        self.assertEqual(summary["flow_3d_display"], "+30,000 contracts")
+        self.assertEqual(summary["flow_5d_display"], "N/A (only 4/5 daily changes)")
+        self.assertIn("3-day tier remains eligible for CIS", summary["cis_note"])
+        self.assertIn("5-day tier is omitted", summary["cis_note"])
+        self.assertIn("not extrapolated", summary["cis_note"])
 
     def test_unavailable_spot_and_macro_feeds_render_as_unavailable_not_zero(self):
         from regime_engine import RegimeEngine
@@ -225,10 +277,27 @@ class ReportIntegrationTests(unittest.TestCase):
             "display_date": "02 October 2026",
             "cis_score": 0.0,
             "fii_long_ratio": 50.0,
-            "fii_stk_flow_3d": 0,
+            "fii_stk_flow_3d": None,
+            "fii_stk_flow_5d": None,
             "fii_stk_flow_3d_complete": False,
-            "fii_stk_flow_3d_sample_days": 1,
-            "sheet_sections": {},
+            "fii_stk_flow_5d_complete": False,
+            "fii_stk_flow_3d_sample_days": 2,
+            "fii_stk_flow_5d_sample_days": 2,
+            "sheet_sections": {
+                "Index Futures": [
+                    {
+                        "participant": "FII",
+                        "long_action": "Added Longs: +0",
+                        "short_action": "Added Shorts: +0",
+                        "net_action": "Bought Net: +0",
+                        "sentiment": "NEUTRAL",
+                        "carried_sentiment": "NEUTRAL",
+                        "carried_t0": 20,
+                        "carried_t1": 20,
+                        "carried_t2": 20,
+                    }
+                ]
+            },
             "traps": [],
         }
         macro = {
@@ -240,6 +309,10 @@ class ReportIntegrationTests(unittest.TestCase):
             }.items()
         }
         regime = RegimeEngine().evaluate_regime_and_action(calc, macro, nifty_current_price=None)
+        self.assertEqual(regime["primary_signal"], "NO TRADE — FRESH NIFTY DATA UNAVAILABLE")
+        self.assertEqual(regime["capital_allocation_pct"], 0)
+        self.assertEqual(regime["cash_reserve_pct"], 100)
+        self.assertEqual(regime["trajectory_type"], "DATA_UNAVAILABLE")
         with tempfile.TemporaryDirectory() as tempdir:
             report = ReportGenerator(output_dir=tempdir).generate_html_report(
                 calc, regime, {"all_sectors": [], "rotation_summary": "Sector data unavailable."}, macro,
@@ -254,8 +327,20 @@ class ReportIntegrationTests(unittest.TestCase):
                 html = handle.read()
             with open(report["md_path"], encoding="utf-8") as handle:
                 markdown = handle.read()
+        self.assertIn("NO TRADE — FRESH NIFTY DATA UNAVAILABLE", html)
+        self.assertIn("NO TRADE — FRESH NIFTY DATA UNAVAILABLE", markdown)
+        self.assertTrue(all(line == line.rstrip() for line in html.splitlines()))
         self.assertIn("Unavailable", html)
-        self.assertIn("Insufficient history (1/3 daily changes)", html)
+        self.assertIn("Insufficient history (2/3 daily changes)", html)
+        self.assertIn("Insufficient history (2/5 daily changes)", html)
+        self.assertIn("N/A (only 2/3 daily changes)", html)
+        self.assertIn("N/A (only 2/5 daily changes)", markdown)
+        for document in (html, markdown):
+            self.assertIn("Missing changes are not extrapolated", document)
+            self.assertIn("omitted from CIS", document)
+            self.assertIn("can differ from earlier runs", document)
+        self.assertIn("2 Sessions Ago", html)
+        self.assertIn(">20</td>", html)
         self.assertIn("Unavailable", html)
         self.assertIn("Unavailable", markdown)
         self.assertNotIn("23,900", html)

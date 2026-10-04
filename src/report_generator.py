@@ -60,6 +60,75 @@ class ReportGenerator:
         return {"setups": list(result), "total_indices": None, "scanned_indices": None, "failed_indices": [], "status": "unknown"}
 
     @staticmethod
+    def _fii_flow_summary(calc_res):
+        """Return honest 3-/5-session flow displays and the CIS availability caveat."""
+        flow_3d_value = calc_res.get("fii_stk_flow_3d")
+        flow_5d_value = calc_res.get("fii_stk_flow_5d")
+        flow_3d_complete = bool(calc_res.get("fii_stk_flow_3d_complete", True)) and flow_3d_value is not None
+        flow_5d_complete = bool(calc_res.get("fii_stk_flow_5d_complete", True)) and flow_5d_value is not None
+
+        def sample_count(key):
+            if key not in calc_res:
+                return None
+            try:
+                return max(0, int(calc_res[key]))
+            except (TypeError, ValueError):
+                return None
+
+        sample_3d = sample_count("fii_stk_flow_3d_sample_days")
+        sample_5d = sample_count("fii_stk_flow_5d_sample_days")
+
+        def display(value, complete, sample, required, unit=""):
+            if complete:
+                suffix = f" {unit}" if unit else ""
+                return f"{int(value):+,}{suffix}"
+            if sample is None:
+                return "N/A (sample count not recorded)"
+            return f"N/A (only {sample}/{required} daily changes)"
+
+        flow_3d_display = display(flow_3d_value, flow_3d_complete, sample_3d, 3, "contracts")
+        flow_5d_display = display(flow_5d_value, flow_5d_complete, sample_5d, 5, "contracts")
+        if flow_3d_complete and flow_5d_complete:
+            cis_note = ""
+        else:
+            if flow_3d_complete:
+                impact = (
+                    "The complete 3-day tier remains eligible for CIS; the incomplete 5-day tier is omitted."
+                )
+            else:
+                impact = (
+                    "The incomplete stock-flow thrust is omitted from CIS; other available CIS factors remain scored."
+                )
+            cis_note = (
+                f"FII stock-flow history is incomplete (3-day: {flow_3d_display}; 5-day: {flow_5d_display}). "
+                f"Missing changes are not extrapolated. {impact} The resulting CIS-based live signal can differ "
+                "from earlier runs that extrapolated incomplete windows."
+            )
+
+        def description(value, complete, sample, required):
+            if not complete:
+                if sample is None:
+                    return "History availability not recorded"
+                return f"Insufficient history ({sample}/{required} daily changes)"
+            if value > 0:
+                return "Institutional Stock Accumulation"
+            if value < 0:
+                return "Institutional Stock Distribution"
+            return "No net change"
+
+        return {
+            "flow_3d_complete": flow_3d_complete,
+            "flow_5d_complete": flow_5d_complete,
+            "flow_3d_value": flow_3d_value,
+            "flow_5d_value": flow_5d_value,
+            "flow_3d_display": flow_3d_display,
+            "flow_5d_display": flow_5d_display,
+            "flow_3d_description": description(flow_3d_value, flow_3d_complete, sample_3d, 3),
+            "flow_5d_description": description(flow_5d_value, flow_5d_complete, sample_5d, 5),
+            "cis_note": cis_note,
+        }
+
+    @staticmethod
     def _daily_coverage_text(scan):
         total, scanned = scan.get("total_indices"), scan.get("scanned_indices")
         failed = scan.get("failed_indices", [])
@@ -214,8 +283,12 @@ class ReportGenerator:
         snapshot = scenario_res.get("model_snapshot_as_of", "unknown")
         as_of = scenario_res.get("as_of", "unknown")
         direction_note = (
-            f"Walk-forward record ({escape(str(accuracy.get('oos_window', '')))}): NIFTY 1M direction {accuracy.get('nifty_dir_1M', '—')}% vs {accuracy.get('nifty_base_1M', '—')}% base rate (AUC {accuracy.get('dir1M_auc', '—')}); "
-            f"3M direction {accuracy.get('nifty_dir_3M', '—')}% vs {accuracy.get('nifty_base_3M', '—')}% base rate (AUC {accuracy.get('dir3M_auc', '—')})."
+            "Fixed historical walk-forward scorecard from the supplied model data "
+            f"({escape(str(accuracy.get('oos_window', '')))}; not recalculated or retrained each run): "
+            f"NIFTY 1M direction {accuracy.get('nifty_dir_1M', '—')}% vs {accuracy.get('nifty_base_1M', '—')}% base rate "
+            f"(AUC {accuracy.get('dir1M_auc', '—')}); 3M direction {accuracy.get('nifty_dir_3M', '—')}% "
+            f"vs {accuracy.get('nifty_base_3M', '—')}% base rate (AUC {accuracy.get('dir3M_auc', '—')}). "
+            "The live calibrated probability cards above are recalculated from fresh market inputs."
         )
         calibration_note = escape(str(accuracy.get("calibration_note", "")))
         return f"""
@@ -310,17 +383,27 @@ class ReportGenerator:
         display_date = calc_res["display_date"]
         cis = calc_res["cis_score"]
         fii_ratio = calc_res["fii_long_ratio"]
-        fii_stk_3d = calc_res["fii_stk_flow_3d"]
-        flow_3d_complete = calc_res.get("fii_stk_flow_3d_complete", True)
-        flow_3d_sample = calc_res.get("fii_stk_flow_3d_sample_days", 3)
-        flow_3d_display = f"{fii_stk_3d:+,}" if flow_3d_complete else "N/A"
-        flow_3d_color = ("#10B981" if fii_stk_3d > 0 else "#EF4444" if fii_stk_3d < 0 else "#94A3B8") if flow_3d_complete else "#94A3B8"
-        flow_3d_description = (
-            "Institutional Stock Accumulation" if fii_stk_3d > 0 else
-            "Institutional Stock Distribution" if fii_stk_3d < 0 else
-            "No net change" if flow_3d_complete else
-            f"Insufficient history ({flow_3d_sample}/3 daily changes)"
-        )
+        flow_summary = self._fii_flow_summary(calc_res)
+        fii_stk_3d = flow_summary["flow_3d_value"]
+        fii_stk_5d = flow_summary["flow_5d_value"]
+        flow_3d_complete = flow_summary["flow_3d_complete"]
+        flow_5d_complete = flow_summary["flow_5d_complete"]
+        flow_3d_display = flow_summary["flow_3d_display"]
+        flow_5d_display = flow_summary["flow_5d_display"]
+        flow_3d_color = (
+            "#10B981" if fii_stk_3d > 0 else "#EF4444" if fii_stk_3d < 0 else "#94A3B8"
+        ) if flow_3d_complete else "#94A3B8"
+        flow_5d_color = (
+            "#10B981" if fii_stk_5d > 0 else "#EF4444" if fii_stk_5d < 0 else "#94A3B8"
+        ) if flow_5d_complete else "#94A3B8"
+        flow_3d_description = flow_summary["flow_3d_description"]
+        flow_5d_description = flow_summary["flow_5d_description"]
+        cis_flow_note_html = (
+            '<div style="background:#451A03;border:1px solid #B45309;border-radius:8px;padding:11px 14px;'
+            'margin-top:14px;color:#FDE68A;font-size:12px">⚠️ '
+            + escape(flow_summary["cis_note"])
+            + '</div>'
+        ) if flow_summary["cis_note"] else ""
         oi_age = calc_res.get("oi_age_days")
         oi_source = escape(str(calc_res.get("oi_source", "not recorded")))
         oi_status = escape(str(calc_res.get("oi_data_status", "not recorded")))
@@ -629,7 +712,7 @@ class ReportGenerator:
                 n_action = r["net_action"]
                 c_today = f"{r['carried_t0']:,}"
                 c_1d = f"{r['carried_t1']:,}"
-                c_2d = f"{r['carried_t2']:,}"
+                c_2d = "N/A" if r.get("carried_t2") is None else f"{r['carried_t2']:,}"
                 
                 net_color = "#10B981" if r["sentiment"] == "BULLISH" else "#EF4444" if r["sentiment"] == "BEARISH" else "#94A3B8"
                 car_color = "#10B981" if r["carried_sentiment"] == "BULLISH" else "#EF4444" if r["carried_sentiment"] == "BEARISH" else "#94A3B8"
@@ -659,8 +742,8 @@ class ReportGenerator:
                             <th style="padding: 10px 12px;">Short Delta</th>
                             <th style="padding: 10px 12px;">Net Today</th>
                             <th style="padding: 10px 12px;">Carried (Today)</th>
-                            <th style="padding: 10px 12px;">1 Day Ago</th>
-                            <th style="padding: 10px 12px;">2 Days Ago</th>
+                            <th style="padding: 10px 12px;">1 Session Ago</th>
+                            <th style="padding: 10px 12px;">2 Sessions Ago</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -822,7 +905,18 @@ class ReportGenerator:
                         {flow_3d_description}
                     </div>
                 </div>
+
+                <div style="background: #030712; border: 1px solid #1E293B; border-radius: 12px; padding: 16px;">
+                    <div style="color: #94A3B8; font-size: 12px; font-weight: 600; text-transform: uppercase;">FII 5-Day Stock Flow</div>
+                    <div style="font-size: 24px; font-weight: 900; color: {flow_5d_color}; margin: 6px 0;">
+                        {flow_5d_display}
+                    </div>
+                    <div style="color: #94A3B8; font-size: 12px;">
+                        {flow_5d_description}
+                    </div>
+                </div>
             </div>
+            {cis_flow_note_html}
         </div>
 
         <!-- ACTIONABLE SWING STRATEGY & NIFTY TRAJECTORY -->
@@ -944,6 +1038,9 @@ class ReportGenerator:
 </body>
 </html>
 """
+        # Generated inline HTML has no semantic need for trailing whitespace; remove it
+        # so saved reports remain clean under git diff --check as well as in email clients.
+        html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
         # Save HTML file
         out_html_path = os.path.join(self.output_dir, f"prediction_report_{date_str}.html")
         latest_html_path = os.path.join(self.output_dir, "latest_prediction_report.html")
@@ -1055,7 +1152,9 @@ class ReportGenerator:
 ### Scenario level context
 {forecast_text}
 
-**Honest scorecard:** NIFTY 1M direction {_format_pct(accuracy.get('nifty_dir_1M'))} vs {_format_pct(accuracy.get('nifty_base_1M'))} base rate (AUC {accuracy.get('dir1M_auc', '—')}); 3M direction {_format_pct(accuracy.get('nifty_dir_3M'))} vs {_format_pct(accuracy.get('nifty_base_3M'))} base rate (AUC {accuracy.get('dir3M_auc', '—')}). {accuracy.get('calibration_note', '')}
+**Fixed historical scorecard from supplied model data (not recalculated or retrained each run):** NIFTY 1M direction {_format_pct(accuracy.get('nifty_dir_1M'))} vs {_format_pct(accuracy.get('nifty_base_1M'))} base rate (AUC {accuracy.get('dir1M_auc', '—')}); 3M direction {_format_pct(accuracy.get('nifty_dir_3M'))} vs {_format_pct(accuracy.get('nifty_base_3M'))} base rate (AUC {accuracy.get('dir3M_auc', '—')}). {accuracy.get('calibration_note', '')}
+
+**Live probabilities:** recalculated from this run's fresh NIFTY/VIX inputs; these are separate from the fixed historical scorecard.
 
 *Overlay only: 1M is the closest horizon to the core 10–40 trading-day objective; 3M is longer-term context. Do not replace the primary participant-OI/CIS regime, sector confluence, or entry/stop rules. Research only, not investment advice.*
 """
@@ -1064,10 +1163,13 @@ class ReportGenerator:
         display_date = calc_res["display_date"]
         cis = calc_res["cis_score"]
         fii_ratio = calc_res["fii_long_ratio"]
-        fii_stk_3d = calc_res["fii_stk_flow_3d"]
-        flow_3d_complete = calc_res.get("fii_stk_flow_3d_complete", True)
-        flow_3d_sample = calc_res.get("fii_stk_flow_3d_sample_days", 3)
-        flow_3d_display = f"{fii_stk_3d:+,} contracts" if flow_3d_complete else f"N/A (only {flow_3d_sample}/3 daily changes)"
+        flow_summary = self._fii_flow_summary(calc_res)
+        flow_3d_display = flow_summary["flow_3d_display"]
+        flow_5d_display = flow_summary["flow_5d_display"]
+        flow_cis_note_md = (
+            f"\n**FII flow/CIS caveat:** ⚠️ {flow_summary['cis_note']}\n"
+            if flow_summary["cis_note"] else ""
+        )
         oi_source = str(calc_res.get("oi_source", "not recorded"))
         oi_status = str(calc_res.get("oi_data_status", "not recorded"))
         oi_age = calc_res.get("oi_age_days")
@@ -1093,8 +1195,10 @@ class ReportGenerator:
 **Composite Score (CIS)**: `{cis:+.1f} / 10`
 **FII Index Long Ratio**: `{fii_ratio}%`
 **FII 3-Day Stock Futures Flow**: `{flow_3d_display}`
+**FII 5-Day Stock Futures Flow**: `{flow_5d_display}`
 **Participant OI data quality**: `{oi_quality_note}`
 **Capital Allocation**: `{regime_res['capital_allocation_pct']}% Stocks | {regime_res['cash_reserve_pct']}% Cash`
+{flow_cis_note_md}
 
 ---
 
