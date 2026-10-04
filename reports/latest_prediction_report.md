@@ -38,8 +38,6 @@ Daily multi-confluence screening across Broad Market, Sectoral & Thematic NSE In
 
 | Index Name | Category | Grade & Score | Close | Day Low | Swept Support | Wick % | RSI Divergence | Confluences |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Nifty Financial Services | Sectoral | 🔥 GRADE A+ SWEEP (70/100) | 30.4 | 29.5 | 30.1 | 46.1% | Bullish Div | Major Swing Low Swept & Reclaimed, Strong 35%+ Lower Rejection |
-| Nifty Smallcap 250 | Broad Market | ⚡ GRADE B SWEEP (60/100) | 177.8 | 175.1 | 176.5 | 62.9% | Neutral | Major Swing Low Swept & Reclaimed, Massive 50%+ Lower-Wick Absorption |
 | Nifty Bank | Sectoral | ⚡ GRADE B SWEEP (55/100) | 54,450.8 | 54,066.6 | 54,174.3 | 37.5% | Bullish Div | Prior Day Low Swept & Reclaimed, Strong 35%+ Lower Rejection |
 
 ---
@@ -51,14 +49,14 @@ Sector leadership is currently broad-based. Priority to sectors trading above th
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Nifty Energy | -0.68% | -4.32% | Below 20 EMA | +3.66 | IMPROVING (Outperforming) |
 | Nifty Pharma | -2.56% | -1.80% | Below 20 EMA | +3.04 | IMPROVING (Outperforming) |
+| Nifty Smallcap 250 | -1.49% | -4.54% | Below 20 EMA | +2.74 | IMPROVING (Outperforming) |
+| Nifty Financial Services | -0.52% | -6.89% | Below 20 EMA | +2.53 | IMPROVING (Outperforming) |
+| Nifty Oil & Gas | -1.57% | -5.74% | Below 20 EMA | +2.07 | IMPROVING (Outperforming) |
 | Nifty IT | +0.51% | -10.13% | Below 20 EMA | +1.94 | IMPROVING (Outperforming) |
 | Nifty Metal | -2.32% | -4.47% | Below 20 EMA | +1.94 | IMPROVING (Outperforming) |
 | Nifty Bank | -2.03% | -5.15% | Below 20 EMA | +1.89 | IMPROVING (Outperforming) |
 | Nifty PSU Bank | -1.11% | -7.07% | Below 20 EMA | +1.86 | IMPROVING (Outperforming) |
-| Nifty Smallcap 250 | -3.01% | -3.43% | Below 20 EMA | +1.77 | IMPROVING (Outperforming) |
 | Nifty Realty | -1.21% | -8.12% | Below 20 EMA | +1.23 | IMPROVING (Outperforming) |
-| Nifty Financial Services | -2.25% | -6.26% | Below 20 EMA | +1.12 | IMPROVING (Outperforming) |
-| Nifty Oil & Gas | -3.00% | -5.49% | Below 20 EMA | +0.76 | IMPROVING (Outperforming) |
 | Nifty Healthcare | -4.31% | -3.84% | Below 20 EMA | +0.27 | IMPROVING (Outperforming) |
 | Nifty Infrastructure | -3.49% | -5.60% | Below 20 EMA | +0.21 | IMPROVING (Outperforming) |
 | Nifty Midcap 50 | -3.63% | -7.72% | Below 20 EMA | -0.98 | NEUTRAL (In Line) |
