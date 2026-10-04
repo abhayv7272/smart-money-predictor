@@ -1,6 +1,11 @@
 import os
 import datetime
 from signal_chart_renderer import chart_html
+from scenario_lab_report import (
+    load_scenario_lab_data,
+    render_scenario_lab_html,
+    render_scenario_lab_markdown,
+)
 
 class ReportGenerator:
     def __init__(self, output_dir="reports"):
@@ -26,6 +31,10 @@ class ReportGenerator:
         daily_sweep_res = daily_sweep_res or []
         is_friday_report = weekly_sweep_res is not None
         mtf_res = mtf_res or {"has_signals": False, "actionable": [], "triggered": []}
+        scenario_lab_data = load_scenario_lab_data(
+            os.path.join(self.base_dir, "nifty-scenario-lab-github.zip")
+        )
+        scenario_lab_html = render_scenario_lab_html(scenario_lab_data, date_str)
 
         # Signal-only MTF section: suppressed completely when no index trap/MSS exists.
         mtf_section_html = ""
@@ -478,6 +487,8 @@ class ReportGenerator:
             </div>
         </div>
 
+        {scenario_lab_html}
+
         {weekly_section_html}
 
         {mtf_section_html}
@@ -568,7 +579,10 @@ class ReportGenerator:
             f.write(html)
             
         # Also generate Markdown Report
-        md = self._generate_markdown(calc_res, regime_res, sector_res, macro_res, daily_sweep_res, weekly_sweep_res, mtf_res)
+        md = self._generate_markdown(
+            calc_res, regime_res, sector_res, macro_res, daily_sweep_res,
+            weekly_sweep_res, mtf_res, scenario_lab_data
+        )
         out_md_path = os.path.join(self.output_dir, f"prediction_report_{date_str}.md")
         latest_md_path = os.path.join(self.output_dir, "latest_prediction_report.md")
         
@@ -585,7 +599,11 @@ class ReportGenerator:
             "html_content": html
         }
 
-    def _generate_markdown(self, calc_res, regime_res, sector_res, macro_res, daily_sweep_res=None, weekly_sweep_res=None, mtf_res=None):
+    def _generate_markdown(
+        self, calc_res, regime_res, sector_res, macro_res,
+        daily_sweep_res=None, weekly_sweep_res=None, mtf_res=None,
+        scenario_lab_data=None,
+    ):
         display_date = calc_res["display_date"]
         cis = calc_res["cis_score"]
         fii_ratio = calc_res["fii_long_ratio"]
@@ -618,6 +636,7 @@ class ReportGenerator:
 - **SL Sweep Zone (Liquidity Hunt)**: `{regime_res['sweep_zone']}`
 - **Support 2**: `{regime_res['support_2']}`
 """
+        md += render_scenario_lab_markdown(scenario_lab_data, calc_res.get("date"))
         mtf_res = mtf_res or {"has_signals": False, "actionable": []}
         if mtf_res.get("has_signals"):
             md += """
