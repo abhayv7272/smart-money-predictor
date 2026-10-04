@@ -1,0 +1,556 @@
+{
+  "meta": {
+    "title": "NIFTY Market Scenario Predictor",
+    "as_of": "2026-10-01",
+    "data_start": "2016-12-01",
+    "data_end": "2026-10-01",
+    "n_days": 2427,
+    "years": 9.6,
+    "source_archive": "nifty-scenario-lab-github.zip"
+  },
+  "model": {
+    "features": [
+      "iv_pct_252",
+      "uv_pct_252",
+      "n_dd_252",
+      "n_dist_ema200",
+      "bull_count"
+    ],
+    "scaler_mean": [
+      46.8692,
+      47.0261,
+      -4.7703,
+      4.6124,
+      4.2202
+    ],
+    "scaler_scale": [
+      31.9839,
+      32.1341,
+      5.3208,
+      6.3729,
+      1.887
+    ],
+    "y_up_1M": {
+      "w": [
+        -0.0024,
+        -0.1682,
+        -0.4801,
+        0.0154,
+        0.1513
+      ],
+      "b": 0.6183
+    },
+    "y_up_3M": {
+      "w": [
+        -0.0884,
+        -0.6825,
+        -1.603,
+        0.2998,
+        0.1511
+      ],
+      "b": 1.0126
+    },
+    "y_dip5_3M": {
+      "w": [
+        -0.085,
+        0.5108,
+        0.4372,
+        0.109,
+        -0.1934
+      ],
+      "b": -0.916
+    },
+    "y_rally5_3M": {
+      "w": [
+        -0.1751,
+        -0.2995,
+        -1.2695,
+        0.4862,
+        -0.0089
+      ],
+      "b": 0.4528
+    }
+  },
+  "calibration": {
+    "y_up_1M": {
+      "platt_a": 0.1987,
+      "platt_b": 0.4114,
+      "oos_hit%": 62.8,
+      "oos_auc": 0.519,
+      "base_rate%": 64.1,
+      "n": 78
+    },
+    "y_up_3M": {
+      "platt_a": 0.5285,
+      "platt_b": -0.1386,
+      "oos_hit%": 62.8,
+      "oos_auc": 0.676,
+      "base_rate%": 66.7,
+      "n": 78
+    },
+    "y_dip5_3M": {
+      "platt_a": -0.0846,
+      "platt_b": -0.7567,
+      "oos_hit%": 64.1,
+      "oos_auc": 0.57,
+      "base_rate%": 34.6,
+      "n": 78
+    },
+    "y_rally5_3M": {
+      "platt_a": 0.4073,
+      "platt_b": 0.1381,
+      "oos_hit%": 56.4,
+      "oos_auc": 0.607,
+      "base_rate%": 62.8,
+      "n": 78
+    }
+  },
+  "quintiles": [
+    {
+      "bucket": 1,
+      "p_lo": 0.359,
+      "p_hi": 0.652,
+      "avg_conf": 0.506,
+      "accuracy%": 56.2,
+      "n": 16
+    },
+    {
+      "bucket": 2,
+      "p_lo": 0.652,
+      "p_hi": 0.78,
+      "avg_conf": 0.734,
+      "accuracy%": 46.7,
+      "n": 15
+    },
+    {
+      "bucket": 3,
+      "p_lo": 0.78,
+      "p_hi": 0.87,
+      "avg_conf": 0.825,
+      "accuracy%": 62.5,
+      "n": 16
+    },
+    {
+      "bucket": 4,
+      "p_lo": 0.87,
+      "p_hi": 0.932,
+      "avg_conf": 0.904,
+      "accuracy%": 73.3,
+      "n": 15
+    },
+    {
+      "bucket": 5,
+      "p_lo": 0.932,
+      "p_hi": 1.0,
+      "avg_conf": 0.967,
+      "accuracy%": 93.8,
+      "n": 16
+    }
+  ],
+  "quintile_cutoffs": [
+    0.6522,
+    0.7804,
+    0.8703,
+    0.9315
+  ],
+  "scenarios": {
+    "panic_washout": {
+      "key": "panic_washout",
+      "name": "Panic Washout (drawdown + India VIX > 20)",
+      "rule": "(NIFTY 52w-high se -10% se zyada neeche) AND (India VIX > 20)",
+      "meaning": "Capitulation ho chuki hai (VIX ne washout dikhaya). History me best 3M payoff yahan hota hai.",
+      "action": "Tranche deploy — historically highest-payoff bucket (par 3M me 5%+ dip ki probability bhi ~33% hai).",
+      "stats_all": {
+        "events": 17,
+        "days": 167,
+        "ret1": {
+          "n": 17,
+          "med": 3.4,
+          "avg": 2.49,
+          "up%": 82.4
+        },
+        "ret3": {
+          "n": 17,
+          "med": 5.95,
+          "avg": 6.66,
+          "up%": 88.2
+        },
+        "dip3": -2.92,
+        "rally3": 7.83
+      },
+      "stats_2023+": {
+        "events": 3,
+        "days": 167,
+        "ret1": {
+          "n": 3,
+          "med": 5.09,
+          "avg": 6.64,
+          "up%": 100.0
+        },
+        "ret3": {
+          "n": 3,
+          "med": 4.43,
+          "avg": 7.09,
+          "up%": 100.0
+        },
+        "dip3": -2.92,
+        "rally3": 6.84
+      }
+    },
+    "both_panic": {
+      "key": "both_panic",
+      "name": "Both-Market Panic (India + US VIX > 70th pct)",
+      "rule": "(India VIX %ile > 70) AND (US VIX %ile > 70)",
+      "meaning": "Dono markets panic me. Contrarian lagta hai par data me ye SABSE KHARAB setup hai (3M avg negative).",
+      "action": "Naya capital nahi — wait. Pehle se invested ho to hedging / position-size check karo.",
+      "stats_all": {
+        "events": 49,
+        "days": 402,
+        "ret1": {
+          "n": 49,
+          "med": 0.39,
+          "avg": -0.98,
+          "up%": 53.1
+        },
+        "ret3": {
+          "n": 48,
+          "med": -0.19,
+          "avg": -0.37,
+          "up%": 50.0
+        },
+        "dip3": -4.36,
+        "rally3": 5.74
+      },
+      "stats_2023+": {
+        "events": 20,
+        "days": 402,
+        "ret1": {
+          "n": 20,
+          "med": 0.52,
+          "avg": -0.49,
+          "up%": 55.0
+        },
+        "ret3": {
+          "n": 19,
+          "med": -1.01,
+          "avg": -0.13,
+          "up%": 42.1
+        },
+        "dip3": -4.83,
+        "rally3": 4.18
+      }
+    },
+    "slow_bleed": {
+      "key": "slow_bleed",
+      "name": "Slow Bleed (oversold par VIX shant < 17)",
+      "rule": "(RSI14 < 30) AND (India VIX < 17)",
+      "meaning": "Washout nahi hua — market dheere-dheere gir raha hai. 1M me bounce aata hai, 3M me aksar aur neeche.",
+      "action": "Chhota starter position hi lo; bada bet VIX 20+ washout par rakho.",
+      "stats_all": {
+        "events": 11,
+        "days": 48,
+        "ret1": {
+          "n": 9,
+          "med": 1.5,
+          "avg": 1.92,
+          "up%": 88.9
+        },
+        "ret3": {
+          "n": 9,
+          "med": -1.73,
+          "avg": 2.47,
+          "up%": 44.4
+        },
+        "dip3": -2.99,
+        "rally3": 6.07
+      },
+      "stats_2023+": {
+        "events": 9,
+        "days": 48,
+        "ret1": {
+          "n": 7,
+          "med": 1.5,
+          "avg": 2.47,
+          "up%": 100.0
+        },
+        "ret3": {
+          "n": 7,
+          "med": -2.13,
+          "avg": 0.79,
+          "up%": 28.6
+        },
+        "dip3": -2.99,
+        "rally3": 5.25
+      }
+    },
+    "deep_oversold_fear": {
+      "key": "deep_oversold_fear",
+      "name": "Deep Oversold + Fear (below 200EMA, RSI<30, VIX %ile>50)",
+      "rule": "(200EMA se -5% se zyada neeche) AND (RSI14 < 30) AND (India VIX %ile > 50)",
+      "meaning": "Bullish extreme: 1M me 73% upar. Par 'slow bleed' version se dhyan — VIX<17 ho to thesis weak.",
+      "action": "Tranche-1/2 yahan historically best (3M median +6.4%), stop 200EMA se 5% aur neeche weekly close.",
+      "stats_all": {
+        "events": 7,
+        "days": 27,
+        "ret1": {
+          "n": 6,
+          "med": 3.49,
+          "avg": 0.59,
+          "up%": 83.3
+        },
+        "ret3": {
+          "n": 6,
+          "med": 5.4,
+          "avg": 4.52,
+          "up%": 83.3
+        },
+        "dip3": -3.09,
+        "rally3": 8.01
+      },
+      "stats_2023+": {
+        "events": 4,
+        "days": 27,
+        "ret1": {
+          "n": 3,
+          "med": 5.09,
+          "avg": 4.55,
+          "up%": 100.0
+        },
+        "ret3": {
+          "n": 3,
+          "med": 4.43,
+          "avg": 3.77,
+          "up%": 100.0
+        },
+        "dip3": -2.92,
+        "rally3": 6.84
+      }
+    },
+    "retest": {
+      "key": "retest",
+      "name": "6M-Low Retest (low ke 3% andar, RSI<40)",
+      "rule": "(NIFTY 6-mahine low ke 3% andar) AND (RSI14 < 40)",
+      "meaning": "Purana low test ho raha hai. Historically 3M median +7% (77% upar).",
+      "action": "Tranche-2 yahan historically best hai; stop 6M-low ke neeche weekly close par.",
+      "stats_all": {
+        "events": 43,
+        "days": 115,
+        "ret1": {
+          "n": 42,
+          "med": 1.73,
+          "avg": 2.01,
+          "up%": 71.4
+        },
+        "ret3": {
+          "n": 42,
+          "med": 6.28,
+          "avg": 5.73,
+          "up%": 71.4
+        },
+        "dip3": -2.91,
+        "rally3": 8.24
+      },
+      "stats_2023+": {
+        "events": 24,
+        "days": 115,
+        "ret1": {
+          "n": 23,
+          "med": 1.36,
+          "avg": 1.58,
+          "up%": 60.9
+        },
+        "ret3": {
+          "n": 23,
+          "med": 5.38,
+          "avg": 4.57,
+          "up%": 69.6
+        },
+        "dip3": -3.69,
+        "rally3": 7.26
+      }
+    },
+    "local_fear": {
+      "key": "local_fear",
+      "name": "Local Fear (India VIX %ile>50, US calm)",
+      "rule": "(India VIX %ile > 50) AND (US VIX %ile < 50)",
+      "meaning": "Fear sirf India me hai (FII / event related). 3M me 72% upar, avg +2.6%.",
+      "action": "Accumulation zone — India-specific fear historically buyable hota hai.",
+      "stats_all": {
+        "events": 76,
+        "days": 362,
+        "ret1": {
+          "n": 73,
+          "med": 1.14,
+          "avg": 1.16,
+          "up%": 69.9
+        },
+        "ret3": {
+          "n": 70,
+          "med": 2.95,
+          "avg": 2.2,
+          "up%": 70.0
+        },
+        "dip3": -3.26,
+        "rally3": 5.63
+      },
+      "stats_2023+": {
+        "events": 29,
+        "days": 362,
+        "ret1": {
+          "n": 26,
+          "med": 0.84,
+          "avg": 1.17,
+          "up%": 73.1
+        },
+        "ret3": {
+          "n": 23,
+          "med": 2.25,
+          "avg": 1.98,
+          "up%": 60.9
+        },
+        "dip3": -3.62,
+        "rally3": 4.45
+      }
+    },
+    "momentum_bull": {
+      "key": "momentum_bull",
+      "name": "Momentum Bull (above 200EMA + bull-count >= 4)",
+      "rule": "200EMA ke upar AND bull-count >= 4 (strength atoms)",
+      "meaning": "Deep-search me highest hit-rate family (strength + calm VIX).",
+      "action": "Buy-the-dip on minor pullbacks; trend-following kar sakte ho.",
+      "stats_all": {
+        "events": 78,
+        "days": 1653,
+        "ret1": {
+          "n": 78,
+          "med": 1.59,
+          "avg": 0.44,
+          "up%": 65.4
+        },
+        "ret3": {
+          "n": 76,
+          "med": 5.27,
+          "avg": 2.87,
+          "up%": 73.7
+        },
+        "dip3": -1.81,
+        "rally3": 7.67
+      },
+      "stats_2023+": {
+        "events": 27,
+        "days": 1653,
+        "ret1": {
+          "n": 27,
+          "med": 1.39,
+          "avg": 0.9,
+          "up%": 55.6
+        },
+        "ret3": {
+          "n": 25,
+          "med": 5.87,
+          "avg": 4.6,
+          "up%": 76.0
+        },
+        "dip3": -3.98,
+        "rally3": 6.42
+      }
+    },
+    "complacency": {
+      "key": "complacency",
+      "name": "Complacency (dono VIX calm + overbought)",
+      "rule": "(India VIX %ile<25 AND US VIX %ile<30) AND (RSI14 > 65)",
+      "meaning": "1M me aksar upar, par 3M me hangover — fear premium khatam, hedging sasta.",
+      "action": "Ride karo par trailing stop; low VIX ko hedging ka mauka samjho.",
+      "stats_all": {
+        "events": 41,
+        "days": 150,
+        "ret1": {
+          "n": 41,
+          "med": 2.17,
+          "avg": 2.16,
+          "up%": 75.6
+        },
+        "ret3": {
+          "n": 41,
+          "med": 5.03,
+          "avg": 3.81,
+          "up%": 80.5
+        },
+        "dip3": -1.07,
+        "rally3": 7.08
+      },
+      "stats_2023+": {
+        "events": 14,
+        "days": 150,
+        "ret1": {
+          "n": 14,
+          "med": 2.56,
+          "avg": 2.13,
+          "up%": 78.6
+        },
+        "ret3": {
+          "n": 14,
+          "med": 5.31,
+          "avg": 4.66,
+          "up%": 85.7
+        },
+        "dip3": -0.93,
+        "rally3": 6.96
+      }
+    }
+  },
+  "scenario_order": [
+    "panic_washout",
+    "both_panic",
+    "slow_bleed",
+    "deep_oversold_fear",
+    "retest",
+    "local_fear",
+    "momentum_bull",
+    "complacency"
+  ],
+  "accuracy": {
+    "vix_direction_1M": 61.7,
+    "vix_direction_2M": 62.9,
+    "vix_baseline": 44.7,
+    "nifty_dir_1M": 62.8,
+    "nifty_dir_3M": 62.8,
+    "nifty_base_1M": 64.1,
+    "nifty_base_3M": 66.7,
+    "dip_auc": 0.57,
+    "rally_auc": 0.607,
+    "dir3M_auc": 0.676,
+    "dir1M_auc": 0.519,
+    "sweep_win": 75.0,
+    "vixgt20_win": 73.3,
+    "dd10_win": 75.0,
+    "combos_searched": 99762,
+    "model_versions": 12,
+    "source": "out/accuracy_final.json (run 2026-10-01)",
+    "vix_direction_3M": 59.8,
+    "dip_hit_3M": 64.1,
+    "rally_hit_3M": 56.4,
+    "sweep_win_plain": 65.3,
+    "below200_win": 71.4,
+    "atoms_screened": 67,
+    "survivors": 3501,
+    "brier_cal_honest": {
+      "up_1M": 0.2585,
+      "up_3M": 0.2518,
+      "dip5_3M": 0.2272,
+      "rally5_3M": 0.3232
+    },
+    "brier_base_honest": {
+      "up_1M": 0.2461,
+      "up_3M": 0.2461,
+      "dip5_3M": 0.2256,
+      "rally5_3M": 0.2461
+    },
+    "calibration_note": "Platt calibration pehle 60% OOS par fit, aakhri 40% par evaluate. Hold-out par calibrated Brier base-rate se sirf thoda better/same hai — model ki asli value ranking (AUC) aur high-confidence bucket me hai.",
+    "oos_window": "2020-01-01 -> 2026-06-30 (walk-forward, 100-din embargo)"
+  },
+  "model_bucket_medians_pct": {
+    "1M": 1.6,
+    "3M": 4.2
+  }
+}

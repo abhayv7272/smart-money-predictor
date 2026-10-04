@@ -1,7 +1,16 @@
 name: Smart Money Daily Market Predictor
 
 on:
+  schedule:
+    # GitHub cron uses UTC: 15:30 UTC = 21:00 IST, weekdays (weekly scan is gated to Friday in India time).
+    - cron: '30 15 * * 1-5'
   workflow_dispatch:
+    inputs:
+      force_weekly:
+        description: "Include the weekly sweep radar even when this manual run is not Friday"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   run-prediction:
@@ -37,8 +46,13 @@ jobs:
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
           MAIL_FROM: ${{ secrets.MAIL_FROM || secrets.MAIL_USERNAME }}
           REQUIRE_EMAIL: 'true'
+          FORCE_WEEKLY: ${{ inputs.force_weekly }}
         run: |
-          python src/main.py
+          if [ "$FORCE_WEEKLY" = "true" ]; then
+            python src/main.py --weekly
+          else
+            python src/main.py
+          fi
 
       - name: Commit and Push Prediction Reports
         run: |

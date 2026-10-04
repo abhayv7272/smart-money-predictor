@@ -248,3 +248,18 @@ Pipeline: previous completed W-FRI high/low → current-week daily low below PWL
 ## 12. EMBEDDED SIGNAL CHARTS IN HTML/GMAIL REPORTS
 
 Every qualifying Daily Liquidity Sweep, Friday Weekly Liquidity Sweep, and signal-only MTF PWL→Daily Trap→15m MSS setup now includes an annotated candlestick chart. Daily charts show swept level and invalidation low; weekly charts show weekly liquidity pool and stop; MTF charts show PWL, MSS entry, SL, T1, and PWH/T2. Standalone HTML uses embedded base64 PNGs, while `email_sender.py` converts them to inline CID MIME attachments so Gmail displays charts without external hosting or blocked URLs. Charts are generated only for active/qualifying signals.
+
+---
+
+## 13. NIFTY SCENARIO LAB OVERLAY (SECONDARY 1–3 MONTH CONTEXT)
+
+The supplied `nifty-scenario-lab-github.zip` model is integrated into `src/nifty_scenario_engine.py` and the daily HTML/Markdown/email reports. Frozen model weights, calibration, scorecard and eight historical scenario definitions are stored in `data/nifty_scenario_lab/model_data.json` under the supplied MIT license.
+
+- Every daily run downloads fresh `^NSEI`, `^INDIAVIX` and `^VIX` closes and recomputes the model inputs; it does not reuse the zip's dated `live` snapshot.
+- US VIX is shifted one Indian trading session before feature calculation to prevent same-night US-close look-ahead.
+- The report includes calibrated 1M/3M direction probabilities, 3M 5%+ dip/rally risk, matched scenarios, historical bucket performance and cautious level context. It also states the walk-forward hit rates alongside base rates and AUC.
+- The overlay is contextual only: 1M (~20 sessions) is near our 10–40 day swing horizon; 3M is longer macro context. It must never override participant-OI/CIS, capital-regime limits, sector confluence, or entry/stop controls.
+- If live prices/VIX are unavailable, the report says “unavailable”; a stale embedded forecast is never presented as current.
+
+### Weekly delivery fix
+Root cause of missing automatic weekly reports: `.github/workflows/daily_prediction.yml` previously had only `workflow_dispatch` and no schedule, so no Friday job ran by itself. It now has the weekday `15:30 UTC` cron (21:00 IST). The Friday India-time gate adds the full weekly scan to that same email. The report receives the complete weekly scan object—not just its hits—and distinguishes zero signals from partial/failed data through scanned-index coverage, failed-feed names and near-misses. GitHub scheduled workflows execute from the repository's default branch; use `workflow_dispatch` to test before merge.
