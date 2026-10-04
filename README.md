@@ -9,7 +9,7 @@ Built specifically for **10-to-40 Day & 1-to-2 Month Positional / Swing Traders*
 ## 🌟 Key Features
 
 - **100% Free Data Pipeline**: Fetches official daily NSE participant-wise Open Interest, Trading Volumes, and Global Macro data with **Zero Paid Subscriptions**.
-- **Exact Amit Dhamija Mathematical Engine**: Computes Multi-Day Carried Inventory (Today, 1 Day Ago, 2 Days Ago) and Daily Flow of Funds (Added/Closed Longs & Shorts) across Index Futures, Calls, Puts, Stock Futures, Stock Calls, and Stock Puts.
+- **Exact Amit Dhamija Mathematical Engine**: Computes Multi-Day Carried Inventory (latest session, previous session, and T-2 when available) and Daily Flow of Funds (Added/Closed Longs & Shorts) across Index Futures, Calls, Puts, Stock Futures, Stock Calls, and Stock Puts.
 - **6-Factor Composite Institutional Score (CIS)**: Weighted quantitative scoring (-10 to +10) proven across **1,417 trading days (5+ Years)** with a **76.9% Win Rate** and **4.72x Profit Factor** on multi-week swings.
 - **5-Regime Capital Exposure Engine**: Tells you precisely whether to deploy **100% Capital** or sit on **90%-100% Cash** to protect alpha.
 - **Institutional Sector Rotation Leaderboard**: Ranks 16 major sectors (*Nifty Auto, Bank, IT, Pharma, Metal, FMCG, Energy, Realty, Healthcare, etc.*) based on Relative Strength (RS vs Nifty) and 20 EMA trend.
@@ -32,6 +32,9 @@ Built specifically for **10-to-40 Day & 1-to-2 Month Positional / Swing Traders*
 │ Worst Single Drawdown    │ -25.36%                     │ -7.71%                      │ +17.65% Drawdown Shield (20 EMA)│
 └──────────────────────────┴─────────────────────────────┴─────────────────────────────┴─────────────────────────────────┘
 ```
+
+### Historical scores vs. live run outputs
+The existing CIS headline **76.9% 40-day win-rate** and **4.72x profit-factor** claims above are unchanged; the Scenario Lab integration does not retrain or recalculate those historical figures. Separately, the Scenario Lab reproduces the supplied model-data walk-forward scorecard (snapshot `2026-10-01`): 1M direction hit rate **62.8% vs. 64.1% base rate**, and 3M direction hit rate **62.8% vs. 66.7% base rate** (78 observations each). These historical benchmarks are fixed, not recomputed on every run. Daily calibrated probabilities are recalculated from fresh NIFTY/VIX inputs using the supplied frozen weights.
 
 ---
 
@@ -112,6 +115,7 @@ smart-money-predictor/
 │   ├── sector_rotation.py           # 16-Sector RS & Smart Money Rotation Analyzer
 │   ├── index_sweep_engine.py        # Multi-Confluence Liquidity Sweep Radar across ALL NSE Indices
 │   ├── weekly_index_sweep_engine.py # Friday weekly liquidity sweep and feed-coverage diagnostics
+│   ├── nse_calendar.py              # NSE equity sessions and 2026 holiday calendar
 │   ├── nifty_scenario_engine.py    # Fresh VIX/NIFTY 1–3M scenario overlay
 │   ├── report_generator.py          # HTML + Markdown + email report generator
 │   └── email_sender.py              # Automated Gmail SMTP Dispatcher
@@ -147,6 +151,8 @@ GitHub Actions runs regression tests before the pipeline and treats missing SMTP
 ### Fetch and history integrity
 All Yahoo Finance consumers use `src/market_data.py`, which applies explicit network timeouts, normalizes both Yahoo MultiIndex column orders, drops malformed OHLC bars, and process-caches successful downloads to avoid repeated requests in a single run. Every live index/macro history is freshness-checked. Macro failures are shown as **Unavailable**, not zero; only like-for-like index symbols are used for spot levels (no differently scaled ETF substitution), and Yahoo `^TNX` values are converted from tenths of a percentage point.
 
-NSE participant-OI CSV rows and SQLite fallback rows must contain exactly one Client/DII/FII/Pro record per date. Cached OI older than seven calendar days is rejected. Recent history is truncated before a large archive gap; if fewer than three continuous recent dates remain, the report is blocked and a configured email receives a data-quality notice. Three-/five-session FII stock-flow totals are never extrapolated from one day; incomplete windows are reported as unavailable.
+`src/nse_calendar.py` tracks the official 2026 NSE equity holidays from [NSE circular NSE/CMTR/71775](https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf). The MTF scanner chooses its latest completed session across exchange holidays and weekends; participant-OI archive lookup starts from that completed session and skips non-trading dates, rather than requesting a not-yet-closed current day. Update this explicit calendar from the NSE annual circular when a new year is published.
 
-The Scenario Lab overlay refreshes current inputs on every run, but keeps the supplied walk-forward model weights fixed. It reports unavailable rather than reusing the archive's dated embedded live forecast if NIFTY/VIX downloads fail.
+NSE participant-OI CSV rows and SQLite fallback rows must contain exactly one Client/DII/FII/Pro record per date. Cached OI older than seven calendar days is rejected. Recent history is truncated before a large archive gap; if fewer than three continuous recent sessions remain, signal generation is blocked and a configured email receives a data-quality notice. This is intentional: the T-2 position is never fabricated or taken from across a large history gap. Before a session closes, the latest OI date remains the prior completed NSE session; the scheduled workflow runs at 9:00 PM IST and searches for that day's published archive. Three-/five-session FII stock-flow totals are never extrapolated from fewer than the required daily changes. An incomplete window is unavailable (`None`) and shown as **N/A**, not treated as measured zero. A complete 3-day thrust may still be scored when the 5-day window is incomplete; unavailable stock-flow tiers are omitted from CIS while other valid factors remain active. If a fresh NIFTY spot close cannot be validated, the report labels the primary action **NO TRADE**, recommends 0% new equity exposure / 100% cash, and treats OI regime as context only. These runtime safeguards can change a live CIS or signal; they do not alter or retrain the historical accuracy claims above.
+
+The Scenario Lab overlay refreshes current inputs on every run, but keeps the supplied walk-forward model weights and historical scorecard fixed. Its historical accuracy/base-rate figures are not recalculated on each run; only live probabilities change with fresh NIFTY/VIX inputs. It reports unavailable rather than reusing the archive's dated embedded live forecast if NIFTY/VIX downloads fail.

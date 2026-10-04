@@ -1,9 +1,7 @@
-import datetime as dt
 import os
 import sys
 import unittest
 from unittest.mock import patch
-from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
@@ -16,12 +14,16 @@ import weekly_index_sweep_engine as weekly_module
 from index_sweep_engine import IndexSweepEngine
 from market_data import MarketDataError
 from mtf_index_sweep_engine import MTFIndexSweepEngine
+from nse_calendar import is_nse_equity_trading_day, latest_completed_nse_session
 from weekly_index_sweep_engine import WeeklyIndexSweepEngine
 
 
 def daily_bars(count=320, flat=False):
-    today = dt.datetime.now(ZoneInfo("Asia/Kolkata")).date()
-    index = pd.bdate_range(end=today, periods=count)
+    # Keep synthetic bars on completed NSE sessions, not generic weekdays.
+    today = latest_completed_nse_session()
+    candidates = pd.date_range(end=today, periods=count * 2, freq="D")
+    sessions = [day for day in candidates if is_nse_equity_trading_day(day.date())]
+    index = pd.DatetimeIndex(sessions[-count:])
     close = np.full(count, 100.0) if flat else np.linspace(90, 120, count)
     return pd.DataFrame(
         {"Open": close, "High": close + 1, "Low": close - 1, "Close": close, "Volume": np.full(count, 1000)},
