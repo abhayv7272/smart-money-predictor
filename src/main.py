@@ -1,8 +1,9 @@
 import os
 import sys
-import json
 import datetime
+from html import escape
 from zoneinfo import ZoneInfo
+
 from fetcher import FreeDataFetcher
 from calculator import InstitutionalCalculator
 from regime_engine import RegimeEngine
@@ -10,113 +11,225 @@ from sector_rotation import SectorRotationAnalyzer
 from index_sweep_engine import IndexSweepEngine
 from weekly_index_sweep_engine import WeeklyIndexSweepEngine
 from mtf_index_sweep_engine import MTFIndexSweepEngine
+from nifty_scenario_engine import NiftyScenarioEngine
 from report_generator import ReportGenerator
 from email_sender import EmailSender
+
+
+def _valid_positive_number(value):
+    try:
+        number = float(value)
+        return number if number > 0 and number == number and abs(number) != float("inf") else None
+    except (TypeError, ValueError):
+        return None
+
 
 def run_daily_prediction(force_weekly=False):
     # Determine Friday explicitly in India timezone, independent of the GitHub runner timezone.
     india_now = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
-    is_friday = (india_now.weekday() == 4) or force_weekly or ("--weekly" in sys.argv)
-    
-    print("="*80)
+    is_friday = india_now.weekday() == 4
+    include_weekly = is_friday or force_weekly
+
+    print("=" * 80)
     edition_title = "🏛️  SMART MONEY INSTITUTIONAL PREDICTION ENGINE (PRO EDITION)"
     if is_friday:
         edition_title += " [🗓️ FRIDAY WEEKLY CONFLUENCE SPECIAL]"
+    elif force_weekly:
+        edition_title += " [🗓️ MANUAL WEEKLY SCAN]"
     print(edition_title)
-    print("="*80)
-    
-    # 1. Fetch Latest Data
-    print("\n[1/6] Fetching Official 100% Free Data...")
+    print("=" * 80)
+
+    # Fetch and validate the critical official OI input first. A broken/old OI history
+    # must stop signal generation rather than be converted into a current report.
+    print("\n[1/7] Fetching official NSE participant OI and validating recent history...")
     fetcher = FreeDataFetcher()
-    latest_oi = fetcher.fetch_latest_participant_oi()
-    print(f"      • Latest Participant OI Date: {latest_oi['display_date']} ({latest_oi['status']})")
-    
-    macro_data = fetcher.fetch_global_macro()
-    nifty_px = macro_data.get("nifty_50", {}).get("current", 24200.0)
-    print(f"      • Nifty Current Spot: {nifty_px:,.2f} | Brent Crude: ${macro_data.get('brent_crude', {}).get('current', 0)}/bbl")
-    
-    raw_sectors = fetcher.fetch_sector_strength()
-    print(f"      • Sector Rotation Data: Fetched {len(raw_sectors)} key sectors.")
-    
-    # 2. Multi-day History & Calculation
-    print("\n[2/6] Calculating Amit Dhamija Multi-Day Sheets & Institutional Flow...")
-    hist_df = fetcher.fetch_recent_history(days_count=10)
-    calculator = InstitutionalCalculator(hist_df)
-    calc_res = calculator.calculate_latest_sheet()
-    
+    try:
+        latest_oi = fetcher.fetch_latest_participant_oi()
+        print(
+            f"      • Latest Participant OI: {latest_oi['display_date']} "
+            f"({latest_oi.get('data_status', latest_oi['status'])}, source={latest_oi.get('source')}, "
+            f"age={latest_oi.get('age_days', 'unknown')} day(s))"
+        )
+        hist_df = fetcher.fetch_recent_history(days_count=10)
+        calculator = InstitutionalCalculator(hist_df)
+        calc_res = calculator.calculate_latest_sheet()
+        calc_res["oi_source"] = latest_oi.get("source")
+        calc_res["oi_data_status"] = latest_oi.get("data_status", latest_oi.get("status"))
+        calc_res["oi_age_days"] = latest_oi.get("age_days")
+    except Exception as exc:
+        # Do not emit a stale/invalid signal report. If mail is configured, deliver an
+        # explicit blocked-run notice so a data-integrity failure is not a silent miss.
+        reason = f"{type(exc).__name__}: {exc}"
+        failure_html = (
+            "<html><body style='font-family:Arial;background:#0b1120;color:#e2e8f0;padding:24px'>"
+            "<h2 style='color:#f59e0b'>Smart Money report blocked: participant OI data quality</h2>"
+            "<p>No current trading signal was generated because the critical official NSE participant-OI "
+            "input was unavailable, stale, incomplete, or discontinuous.</p>"
+            f"<pre style='white-space:pre-wrap;color:#cbd5e1'>{escape(reason)}</pre>"
+            "<p>Resolve the feed/history issue, then rerun the daily workflow. No stale OI flows were extrapolated.</p>"
+            "</body></html>"
+        )
+        try:
+            EmailSender(recipient_email=fetcher.config.get("recipient_email") or "abhayv7272@gmail.com").send_report(
+                "Smart Money report blocked by OI data quality", failure_html
+            )
+        except Exception as mail_exc:
+            print(f"[WARN] Could not dispatch critical data-quality notice: {type(mail_exc).__name__}: {mail_exc}")
+        raise
+
     cis = calc_res["cis_score"]
     fii_ratio = calc_res["fii_long_ratio"]
     fii_stk_3d = calc_res["fii_stk_flow_3d"]
-    print(f"      • FII Long Ratio: {fii_ratio}% | FII 3-Day Stock Flow: {fii_stk_3d:+,} contracts")
+    if calc_res.get("fii_stk_flow_3d_complete", False):
+        flow_text = f"{fii_stk_3d:+,} contracts"
+    else:
+        flow_text = f"N/A (only {calc_res.get('fii_stk_flow_3d_sample_days', 0)}/3 daily changes)"
+    print(f"      • FII Long Ratio: {fii_ratio}% | FII 3-Day Stock Flow: {flow_text}")
     print(f"      • Composite Institutional Score (CIS): {cis:+.1f} / 10")
-    
-    # 3. Regime & Action Assignment
-    print("\n[3/6] Assigning Market Regime & Capital Allocation...")
+
+    # Optional market feeds remain bounded and never produce fabricated neutral values.
+    print("\n[2/7] Fetching macro/benchmark feeds and the NIFTY Scenario Lab overlay...")
+    macro_data = fetcher.fetch_global_macro()
+    try:
+        scenario_res = NiftyScenarioEngine().run()
+    except Exception as exc:
+        scenario_res = {"available": False, "error": f"{type(exc).__name__}: {exc}"}
+
+    nifty_entry = macro_data.get("nifty_50", {})
+    nifty_px = None if nifty_entry.get("status") == "unavailable" else _valid_positive_number(nifty_entry.get("current"))
+    if nifty_px is None and scenario_res.get("available"):
+        scenario_inputs = scenario_res.get("inputs", {})
+        nifty_px = _valid_positive_number(scenario_inputs.get("nifty"))
+        if nifty_px is not None:
+            # Scenario history is a fresh actual NIFTY index close; preserve that provenance.
+            macro_data["nifty_50"] = {
+                "symbol": "^NSEI",
+                "source": "Yahoo Finance (Scenario Lab history)",
+                "current": nifty_px,
+                "previous": None,
+                "change_pct": None,
+                "as_of": scenario_res.get("as_of"),
+                "status": "fallback",
+                "error": None,
+            }
+    nifty_text = f"{nifty_px:,.2f}" if nifty_px is not None else "Unavailable"
+    brent_px = _valid_positive_number(macro_data.get("brent_crude", {}).get("current"))
+    brent_text = f"${brent_px:,.2f}/bbl" if brent_px is not None else "Unavailable"
+    print(f"      • Nifty Current Spot: {nifty_text} | Brent Crude: {brent_text}")
+
+    if scenario_res.get("available"):
+        scenario_probs = scenario_res["probabilities"]
+        print(
+            f"      • Scenario P(up 1M/3M): {scenario_probs['y_up_1M']['calibrated']:.1%} / "
+            f"{scenario_probs['y_up_3M']['calibrated']:.1%} | "
+            f"P(3M >5% dip): {scenario_probs['y_dip5_3M']['calibrated']:.1%} | "
+            f"Data as of {scenario_res.get('as_of')}"
+        )
+    else:
+        print(f"      • Scenario overlay unavailable (core report continues): {scenario_res.get('error')}")
+
+    raw_sectors = fetcher.fetch_sector_strength()
+    sector_feed_coverage = fetcher.last_sector_diagnostics
+    print(
+        f"      • Sector Rotation Data: {sector_feed_coverage.get('scanned_indices', len(raw_sectors))}/"
+        f"{sector_feed_coverage.get('total_indices', len(raw_sectors))} valid fresh feeds "
+        f"({sector_feed_coverage.get('status', 'unknown')})."
+    )
+
+    # Regime and NIFTY price levels are calculated only after spot validation.
+    print("\n[3/7] Assigning Market Regime & Capital Allocation...")
     regime_engine = RegimeEngine()
     regime_res = regime_engine.evaluate_regime_and_action(calc_res, macro_data, nifty_px)
-    
     print(f"      • Market Regime: {regime_res['regime_name']}")
     print(f"      • Primary Signal: {regime_res['primary_signal']}")
-    print(f"      • Capital Exposure: {regime_res['capital_allocation_pct']}% Stocks | {regime_res['cash_reserve_pct']}% Cash")
-    
-    # 4. Sector Rotation Analysis
-    print("\n[4/6] Analyzing Institutional Sector Leadership...")
-    sector_analyzer = SectorRotationAnalyzer()
-    sector_res = sector_analyzer.analyze_sectors(raw_sectors)
-    top_leaders = [s["name"] for s in sector_res.get("top_leaders", [])]
-    print(f"      • Top Outperforming Sectors: {', '.join(top_leaders) if top_leaders else 'Broad-based'}")
-    
-    # 5. Daily Index Liquidity Sweep & Reversal Confluence Engine (Runs EVERY DAY)
-    print("\n[5/6] Scanning ALL NSE Indices for Daily Liquidity Sweeps...")
-    sweep_engine = IndexSweepEngine()
-    daily_sweep_res = sweep_engine.scan_all_indices()
-    high_grade_sweeps = [s for s in daily_sweep_res if s.get("score", 0) >= 50]
-    print(f"      • Active Daily Sweep Setups Found: {len(daily_sweep_res)} indices ({len(high_grade_sweeps)} Grade A+/B High Conviction)")
-    
-    # 6. Weekly Index Liquidity Sweep Radar (Runs WEEKLY ON FRIDAY ONLY)
-    weekly_sweep_res = None
-    if is_friday:
-        print("\n[FRIDAY SPECIAL] Scanning ALL NSE Indices for Weekly Liquidity Sweeps (Weekly-Sweep Engine)...")
-        weekly_engine = WeeklyIndexSweepEngine()
-        weekly_scan = weekly_engine.scan_weekly_indices()
-        weekly_sweep_res = weekly_scan.get("weekly_hits", [])
-        print(f"      • Weekly Sweep Hits Found: {len(weekly_sweep_res)} indices across Broad, Sectoral & Thematic categories.")
-    else:
-        print("\n[NOTE] Weekly Index Sweep Radar is scheduled for Friday market close (Runs 1x per week).")
-    
-    # MTF Index Radar: calculate every weekday, but show prominently only when an index signal exists.
-    print("\n[MTF] Scanning NSE indices: Previous-Week PWL → Daily Trap → causal 15-min MSS...")
-    mtf_res = MTFIndexSweepEngine().scan_all_indices()
-    print(f"      • MTF index setups: {len(mtf_res['setups'])} | Active triggers: {len(mtf_res['triggered'])}")
+    print(
+        f"      • Capital Exposure: {regime_res['capital_allocation_pct']}% Stocks | "
+        f"{regime_res['cash_reserve_pct']}% Cash"
+    )
 
-    # 7. Generate Visual Reports & Send Email
-    print("\n[6/6] Generating Ultra-Stunning HTML Dashboard & Dispatching...")
+    print("\n[4/7] Analyzing institutional sector leadership...")
+    sector_res = SectorRotationAnalyzer().analyze_sectors(raw_sectors)
+    sector_res["feed_coverage"] = sector_feed_coverage
+    top_leaders = [sector["name"] for sector in sector_res.get("top_leaders", [])]
+    if top_leaders:
+        leader_text = ", ".join(top_leaders)
+    elif not raw_sectors:
+        leader_text = "Unavailable (no valid sector feeds)"
+    else:
+        leader_text = "No qualifying leader"
+    print(f"      • Top Outperforming Sectors: {leader_text}")
+
+    print("\n[5/7] Scanning NSE indices for daily liquidity sweeps...")
+    daily_scan_res = IndexSweepEngine().scan_all_indices_detailed()
+    daily_setups = daily_scan_res.get("setups", [])
+    high_grade_sweeps = [setup for setup in daily_setups if setup.get("score", 0) >= 50]
+    print(
+        f"      • Daily setups: {len(daily_setups)} | high grade: {len(high_grade_sweeps)} | "
+        f"feed coverage: {daily_scan_res.get('scanned_indices', 0)}/{daily_scan_res.get('total_indices', 0)} "
+        f"({daily_scan_res.get('status')})"
+    )
+
+    weekly_scan_res = None
+    if include_weekly:
+        label = "WEEKLY SPECIAL" if is_friday else "MANUAL WEEKLY SCAN"
+        print(f"\n[{label}] Scanning NSE indices for completed-week liquidity sweeps...")
+        weekly_scan_res = WeeklyIndexSweepEngine().scan_weekly_indices()
+        weekly_total = weekly_scan_res.get("total_scanned", 0)
+        weekly_scanned = weekly_scan_res.get("scanned_indices", max(weekly_total - len(weekly_scan_res.get("failed_indices", [])), 0))
+        print(
+            f"      • Weekly scan: {len(weekly_scan_res.get('weekly_hits', []))} setups | "
+            f"{len(weekly_scan_res.get('near_misses', []))} near-misses | "
+            f"{weekly_scanned}/{weekly_total} feeds available ({weekly_scan_res.get('status')})."
+        )
+    else:
+        print("\n[NOTE] Weekly Index Sweep Radar runs after the completed Friday candle (or with --weekly).")
+
+    print("\n[MTF] Scanning NSE indices: previous-week PWL → daily trap → causal 15-minute MSS...")
+    mtf_res = MTFIndexSweepEngine().scan_all_indices()
+    print(
+        f"      • MTF setups: {len(mtf_res['setups'])} | active triggers: {len(mtf_res['triggered'])} | "
+        f"daily feed coverage: {mtf_res.get('scanned_indices', 0)}/{mtf_res.get('total_indices', 0)} "
+        f"({mtf_res.get('status')})"
+    )
+
+    print("\n[7/7] Generating HTML/Markdown dashboard and dispatching...")
     report_gen = ReportGenerator()
-    rep_res = report_gen.generate_html_report(calc_res, regime_res, sector_res, macro_data, daily_sweep_res, weekly_sweep_res, mtf_res)
-    print(f"      • HTML Dashboard saved to: {rep_res['html_path']}")
-    print(f"      • Latest Dashboard saved to: {rep_res['latest_html_path']}")
-    print(f"      • Markdown Report saved to: {rep_res['md_path']}")
-    
-    # Send Email
-    email_sender = EmailSender(recipient_email=fetcher.config.get("recipient_email", "abhayv7272@gmail.com"))
-    subject_suffix = " | 🗓️ Friday Weekly Edition" if is_friday else ""
-    subject = f"🏛️ Smart Money Prediction ({calc_res['display_date']}): {regime_res['primary_signal']} | CIS {cis:+.1f} | Regime {regime_res['regime_id']}{subject_suffix}"
-    email_sender.send_report(subject, rep_res["html_content"])
-    
-    print("\n" + "="*80)
-    print("✅ PREDICTION COMPLETED SUCCESSFULLY!")
+    rep_res = report_gen.generate_html_report(
+        calc_res, regime_res, sector_res, macro_data, daily_scan_res,
+        weekly_scan_res, mtf_res, scenario_res,
+    )
+    print(f"      • HTML dashboard saved to: {rep_res['html_path']}")
+    print(f"      • Latest dashboard saved to: {rep_res['latest_html_path']}")
+    print(f"      • Markdown report saved to: {rep_res['md_path']}")
+
+    email_sender = EmailSender(recipient_email=fetcher.config.get("recipient_email") or "abhayv7272@gmail.com")
+    subject_suffix = " | 🗓️ Weekly Sweep Edition" if include_weekly else ""
+    subject = (
+        f"🏛️ Smart Money Prediction ({calc_res['display_date']}): {regime_res['primary_signal']} | "
+        f"CIS {cis:+.1f} | Regime {regime_res['regime_id']}{subject_suffix}"
+    )
+    email_sent = email_sender.send_report(subject, rep_res["html_content"])
+
+    print("\n" + "=" * 80)
+    print("✅ REPORT GENERATION COMPLETED")
+    print(f"   Email delivery : {'sent' if email_sent else 'not sent (see delivery log)'}")
     print(f"   Signal        : {regime_res['primary_signal']}")
     print(f"   Allocation    : {regime_res['capital_allocation_pct']}% Stocks / {regime_res['cash_reserve_pct']}% Cash")
-    print(f"   Daily Sweeps  : {len(daily_sweep_res)} Setups Active")
-    if is_friday:
-        print(f"   Weekly Sweeps : {len(weekly_sweep_res) if weekly_sweep_res else 0} Multi-Week Structural Sweeps (Friday Radar Active)")
-    print(f"   Target Swings : 10 to 40 Days Holding in Leading Stage-2 Sectors")
-    print("="*80 + "\n")
-    
+    print(
+        f"   Daily Sweeps  : {len(daily_setups)} setups "
+        f"({daily_scan_res.get('scanned_indices', 0)}/{daily_scan_res.get('total_indices', 0)} feeds)"
+    )
+    if include_weekly:
+        print(
+            f"   Weekly Sweeps : {len(weekly_scan_res.get('weekly_hits', []))} qualifying setups "
+            f"({len(weekly_scan_res.get('near_misses', []))} near-misses; "
+            f"{weekly_scan_res.get('scanned_indices', 0)}/{weekly_scan_res.get('total_scanned', 0)} feeds)"
+        )
+    print("   Target Swings : 10 to 40 Days Holding in Leading Stage-2 Sectors")
+    print("=" * 80 + "\n")
     return rep_res
 
+
 if __name__ == "__main__":
-    # Ensure current directory is in path
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    force_weekly = "--weekly" in sys.argv
-    run_daily_prediction(force_weekly=force_weekly)
+    run_daily_prediction(force_weekly="--weekly" in sys.argv)
