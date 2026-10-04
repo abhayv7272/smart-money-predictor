@@ -21,7 +21,6 @@ Sideways Range Bound: Market expected to trade between support 22250.0 and resis
 - **Support 1**: `22250.0`
 - **SL Sweep Zone (Liquidity Hunt)**: `22215.0`
 - **Support 2**: `22090.0`
-
 ---
 
 ## 🧭 NIFTY Market Scenario Lab — 1–3 Month Outlook
