@@ -14,7 +14,6 @@ from mtf_index_sweep_engine import MTFIndexSweepEngine
 from nifty_scenario_engine import NiftyScenarioEngine
 from report_generator import ReportGenerator
 from email_sender import EmailSender
-from nse_calendar import latest_completed_nse_session
 
 
 def _valid_positive_number(value):
@@ -23,14 +22,6 @@ def _valid_positive_number(value):
         return number if number > 0 and number == number and abs(number) != float("inf") else None
     except (TypeError, ValueError):
         return None
-
-
-def _price_for_completed_session(value, as_of, expected_session):
-    """Accept an NSE index price only when it is dated to the last completed session."""
-    expected_date = expected_session.isoformat() if hasattr(expected_session, "isoformat") else str(expected_session)
-    if str(as_of) != expected_date:
-        return None
-    return _valid_positive_number(value)
 
 
 def run_daily_prediction(force_weekly=False):
@@ -88,14 +79,13 @@ def run_daily_prediction(force_weekly=False):
 
     cis = calc_res["cis_score"]
     fii_ratio = calc_res["fii_long_ratio"]
-    flow_summary = ReportGenerator._fii_flow_summary(calc_res)
-    print(
-        f"      • FII Long Ratio: {fii_ratio}% | FII 3-Day Stock Flow: {flow_summary['flow_3d_display']} "
-        f"| FII 5-Day Stock Flow: {flow_summary['flow_5d_display']}"
-    )
+    fii_stk_3d = calc_res["fii_stk_flow_3d"]
+    if calc_res.get("fii_stk_flow_3d_complete", False):
+        flow_text = f"{fii_stk_3d:+,} contracts"
+    else:
+        flow_text = f"N/A (only {calc_res.get('fii_stk_flow_3d_sample_days', 0)}/3 daily changes)"
+    print(f"      • FII Long Ratio: {fii_ratio}% | FII 3-Day Stock Flow: {flow_text}")
     print(f"      • Composite Institutional Score (CIS): {cis:+.1f} / 10")
-    if flow_summary["cis_note"]:
-        print(f"      • FII flow/CIS caveat: {flow_summary['cis_note']}")
 
     # Optional market feeds remain bounded and never produce fabricated neutral values.
     print("\n[2/7] Fetching macro/benchmark feeds and the NIFTY Scenario Lab overlay...")
@@ -105,44 +95,11 @@ def run_daily_prediction(force_weekly=False):
     except Exception as exc:
         scenario_res = {"available": False, "error": f"{type(exc).__name__}: {exc}"}
 
-    expected_spot_session = latest_completed_nse_session()
-    expected_spot_date = expected_spot_session.isoformat()
-    if scenario_res.get("available") and scenario_res.get("as_of") != expected_spot_date:
-        scenario_as_of = scenario_res.get("as_of") or "unknown date"
-        scenario_res = {
-            "available": False,
-            "error": (
-                f"Scenario inputs are dated {scenario_as_of}; latest completed NSE session is "
-                f"{expected_spot_date}. Stale scenario data is not used as current."
-            ),
-        }
-
     nifty_entry = macro_data.get("nifty_50", {})
-    nifty_px = None
-    if nifty_entry.get("status") != "unavailable":
-        nifty_px = _price_for_completed_session(
-            nifty_entry.get("current"), nifty_entry.get("as_of"), expected_spot_session
-        )
-        if nifty_px is None:
-            actual_as_of = nifty_entry.get("as_of") or "unknown date"
-            if actual_as_of != expected_spot_date:
-                error = (
-                    f"NIFTY close is dated {actual_as_of}; latest completed NSE session is "
-                    f"{expected_spot_date}. Stale spot data is not used for the live signal."
-                )
-            else:
-                error = f"NIFTY close for {expected_spot_date} is invalid."
-            nifty_entry.update(
-                {"current": None, "previous": None, "change_pct": None, "status": "unavailable", "error": error}
-            )
-            macro_data["nifty_50"] = nifty_entry
-            print(f"[WARN] {error}")
-
+    nifty_px = None if nifty_entry.get("status") == "unavailable" else _valid_positive_number(nifty_entry.get("current"))
     if nifty_px is None and scenario_res.get("available"):
         scenario_inputs = scenario_res.get("inputs", {})
-        nifty_px = _price_for_completed_session(
-            scenario_inputs.get("nifty"), scenario_res.get("as_of"), expected_spot_session
-        )
+        nifty_px = _valid_positive_number(scenario_inputs.get("nifty"))
         if nifty_px is not None:
             # Scenario history is a fresh actual NIFTY index close; preserve that provenance.
             macro_data["nifty_50"] = {

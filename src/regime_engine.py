@@ -10,6 +10,7 @@ class RegimeEngine:
     def evaluate_regime_and_action(self, calc_result, macro_data=None, nifty_current_price=None):
         cis = calc_result["cis_score"]
         fii_ratio = calc_result["fii_long_ratio"]
+        fii_stk_3d = calc_result["fii_stk_flow_3d"]
         
         # 1. Regime Classification
         if fii_ratio < self.thresholds["fii_capitulation_ratio"]:
@@ -147,30 +148,6 @@ class RegimeEngine:
                 f"Sideways Range Bound: market expected between support {sup1} and resistance {res1}; favour selective stock picking."
                 if has_spot else
                 "Institutional flow is range-bound; numerical NIFTY support/resistance is unavailable because no fresh spot feed was validated."
-            )
-
-        if not has_spot:
-            # OI can still describe positioning, but a current actionable swing signal
-            # requires a fresh spot anchor and usable price levels. Avoid implying a
-            # strong buy/sell with no validated index-price context.
-            primary_signal = "NO TRADE — FRESH NIFTY DATA UNAVAILABLE"
-            action_badge = "NO_TRADE_DATA_UNAVAILABLE"
-            signal_color = "#64748B"
-            capital_allocation_pct = 0
-            cash_reserve_pct = 100
-            action_instructions = (
-                "NO NEW POSITIONS: fresh NIFTY spot/price data could not be validated, so support/resistance "
-                "and price confirmation are unavailable. Treat participant-OI regime as context only, keep "
-                "capital in cash, and rerun after a fresh market-price feed is available."
-            )
-            trajectory_type = "DATA_UNAVAILABLE"
-            trajectory = (
-                "No actionable NIFTY trajectory can be produced without a fresh, validated spot close. "
-                "Wait for current price and market-structure confirmation."
-            )
-            regime_desc += " Fresh spot confirmation is unavailable; this regime is positioning context only."
-            macro_warnings.append(
-                "Fresh NIFTY spot unavailable: directional regime is context only; no new position is recommended."
             )
 
         return {

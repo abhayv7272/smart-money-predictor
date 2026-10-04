@@ -6,7 +6,8 @@ an ordinary no-signal result.
 """
 from __future__ import annotations
 
-from datetime import timedelta, date
+from datetime import datetime, timedelta, date
+from zoneinfo import ZoneInfo
 from typing import Dict, Optional, Tuple, List
 
 import numpy as np
@@ -14,11 +15,11 @@ import pandas as pd
 
 from index_universe import INDEX_UNIVERSE, symbols_for_history
 from market_data import MarketDataError, download_yahoo, history_is_fresh, normalize_yahoo_frame
-from nse_calendar import latest_completed_nse_session
 
 SWING_WINDOW = 2
 SL_BUFFER_PCT = 0.002
 MIN_RR_T2 = 1.0
+INDIA_TZ = ZoneInfo("Asia/Kolkata")
 
 
 def _flat(df: pd.DataFrame, interval="1d") -> pd.DataFrame:
@@ -32,8 +33,16 @@ def _flat(df: pd.DataFrame, interval="1d") -> pd.DataFrame:
 
 
 def _ref_date() -> date:
-    """Latest completed market session, including NSE holidays and weekends."""
-    return latest_completed_nse_session()
+    now = datetime.now(INDIA_TZ)
+    if now.weekday() == 5:
+        return (now - timedelta(days=1)).date()
+    if now.weekday() == 6:
+        return (now - timedelta(days=2)).date()
+    if (now.hour, now.minute) < (15, 30):
+        now -= timedelta(days=1)
+        while now.weekday() >= 5:
+            now -= timedelta(days=1)
+    return now.date()
 
 
 def _weekly_levels(daily: pd.DataFrame, ref: date) -> Tuple[Optional[float], Optional[float]]:

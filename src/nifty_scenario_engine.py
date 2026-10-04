@@ -1,10 +1,8 @@
 """NIFTY 1–3 month scenario overlay based on the supplied NIFTY Scenario Lab model.
 
-The frozen model weights and supplied historical scorecard live in
-`data/nifty_scenario_lab/model_data.json`. Current features and probabilities are
-recalculated from fresh market data on every run; the historical accuracy/base-rate
-statistics are not recomputed or retrained. The archive's embedded forecast is
-never used as a live-data fallback.
+The frozen model weights/statistics live in data/nifty_scenario_lab/model_data.json.
+Current features are recalculated from Yahoo Finance on every run; the old embedded
+snapshot in the source archive is deliberately not used as a live-data fallback.
 """
 from __future__ import annotations
 

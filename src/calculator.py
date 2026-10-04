@@ -50,18 +50,18 @@ class InstitutionalCalculator:
     def calculate_latest_sheet(self):
         """
         Builds Amit Dhamija Excel layout with Ultra-Enhanced Multi-Timeframe Flow:
-        - Multi-session Carried Inventory (latest session, previous session, T-2 when available)
+        - Multi-day Carried Inventory (TODAY, 1 DAY AGO, 2 DAYS AGO)
         - Positions Bought / Sold Today (Added/Closed Longs & Shorts)
         - 3-Day & 5-Day Cumulative Institutional Thrust
         - 6-Factor Composite Institutional Score (-10 to +10)
         - High-Probability Trap Detection
         """
         if len(self.dates) < 3:
-            raise ValueError("Need at least 3 trading sessions of participant data.")
+            raise ValueError("Need at least 3 trading days of participant data.")
             
-        t0_date = self.dates[-1] # Latest session
-        t1_date = self.dates[-2] # Previous session
-        t2_date = self.dates[-3] # Two sessions ago
+        t0_date = self.dates[-1] # Today
+        t1_date = self.dates[-2] # 1 Day Ago
+        t2_date = self.dates[-3] # 2 Days Ago
         
         df_t0 = self.raw_df[self.raw_df["date"] == t0_date].set_index("client_type")
         df_t1 = self.raw_df[self.raw_df["date"] == t1_date].set_index("client_type")
@@ -145,10 +145,8 @@ class InstitutionalCalculator:
         sample_5d = min(5, len(stk_flows))
         flow_3d_complete = sample_3d == 3
         flow_5d_complete = sample_5d == 5
-        # Use None for unavailable windows instead of a fabricated zero. A complete
-        # three-session flow can still contribute when the five-session window is short.
-        fii_stk_flow_3d = sum(stk_flows[:3]) if flow_3d_complete else None
-        fii_stk_flow_5d = sum(stk_flows[:5]) if flow_5d_complete else None
+        fii_stk_flow_3d = sum(stk_flows[:3]) if flow_3d_complete else 0
+        fii_stk_flow_5d = sum(stk_flows[:5]) if flow_5d_complete else 0
         
         cis_score, cis_breakdown = self._compute_cis(sheet_sections, fii_long_ratio, fii_stk_flow_3d, fii_stk_flow_5d)
         traps = self._detect_traps(sheet_sections, fii_long_ratio)
@@ -182,18 +180,17 @@ class InstitutionalCalculator:
             score -= 2.0
             breakdown.append(("FII Index Futures Selling (-)", -2.0))
             
-        # 2. FII Stock Futures Thrust (5-day weight: 3.0; 3-day fallback: 2.0).
-        # Missing windows are None and must not be interpreted as measured zero flow.
-        if fii_stk_5d is not None and fii_stk_5d > 45000:
+        # 2. FII Stock Futures 5-Day Thrust (Weight: 3.0)
+        if fii_stk_5d > 45000:
             score += 3.0
             breakdown.append(("FII Mega 5-Day Stock Accumulation Wave (+)", +3.0))
-        elif fii_stk_3d is not None and fii_stk_3d > 20000:
+        elif fii_stk_3d > 20000:
             score += 2.0
             breakdown.append(("FII 3-Day Stock Accumulation (+)", +2.0))
-        elif fii_stk_5d is not None and fii_stk_5d < -45000:
+        elif fii_stk_5d < -45000:
             score -= 3.0
             breakdown.append(("FII Mega 5-Day Stock Distribution Wave (-)", -3.0))
-        elif fii_stk_3d is not None and fii_stk_3d < -20000:
+        elif fii_stk_3d < -20000:
             score -= 2.0
             breakdown.append(("FII 3-Day Stock Distribution (-)", -2.0))
             

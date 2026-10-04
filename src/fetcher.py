@@ -16,7 +16,6 @@ import requests
 
 from index_universe import INDEX_UNIVERSE, symbols_for_history
 from market_data import MarketDataError, download_yahoo, history_is_fresh
-from nse_calendar import is_nse_equity_trading_day, latest_completed_nse_session
 
 
 OI_FIELDS = (
@@ -178,18 +177,11 @@ class FreeDataFetcher:
     def fetch_latest_participant_oi(self, target_date=None, max_business_days=5, max_age_days=7):
         """Fetch official NSE OI, otherwise use only a complete and recent SQLite snapshot.
 
-        Weekends and known NSE equity holidays are skipped, each request has a bounded
-        connect/read timeout, and the fallback is rejected if it is stale. No
-        incomplete/duplicate participant table can flow into the calculator.
+        Weekend dates are skipped, each request has a bounded connect/read timeout, and the
+        fallback is rejected if it is stale. No incomplete/duplicate participant table can
+        flow into the calculator.
         """
-        if target_date is None:
-            # Do not request today's archive before the NSE session has completed.
-            # Keep staleness measured against today's calendar date, not the session date.
-            reference_date = self._coerce_date()
-            cur_date = latest_completed_nse_session()
-        else:
-            cur_date = self._coerce_date(target_date)
-            reference_date = cur_date
+        cur_date = self._coerce_date(target_date)
         print(f"[INFO] Scanning official NSE Participant OI from: {cur_date}")
         owns_session = self.http_session is None
         session = self.http_session or requests.Session()
@@ -199,7 +191,7 @@ class FreeDataFetcher:
             while checked < max(1, int(max_business_days)) and offset < 30:
                 current = cur_date - dt.timedelta(days=offset)
                 offset += 1
-                if not is_nse_equity_trading_day(current):
+                if current.weekday() >= 5:
                     continue
                 checked += 1
                 date_token = current.strftime("%d%m%Y")
@@ -213,7 +205,7 @@ class FreeDataFetcher:
                     records = self._parse_participant_csv(text, current.isoformat())
                     records = self._validate_oi_records(records or [], expected_date=current)
                     self._save_to_db(records)
-                    age_days = (reference_date - current).days
+                    age_days = (cur_date - current).days
                     result = {
                         "date": current.isoformat(),
                         "display_date": current.strftime("%d %B %Y"),
@@ -227,11 +219,7 @@ class FreeDataFetcher:
                     print(f"[SUCCESS] Official NSE OI {current.isoformat()} ({len(records)} rows)")
                     return result
                 except requests.RequestException as exc:
-                    detail = str(exc).splitlines()[0] if str(exc) else "no HTTP response received"
-                    print(
-                        f"[WARN] NSE archive {current}: request failed ({type(exc).__name__}: {detail}); "
-                        "archive availability could not be confirmed."
-                    )
+                    print(f"[WARN] NSE archive {current}: {type(exc).__name__}")
                 except ValueError as exc:
                     # A bad/non-CSV response is not a valid market-data snapshot.
                     print(f"[WARN] NSE archive {current}: invalid response ({exc})")
@@ -239,8 +227,8 @@ class FreeDataFetcher:
             if owns_session:
                 session.close()
 
-        print("[WARNING] No valid NSE archive response; checking recent validated SQLite cache instead.")
-        return self._get_latest_from_db(reference_date=reference_date, max_age_days=max_age_days)
+        print("[WARNING] Official NSE OI unavailable; checking recent validated SQLite cache.")
+        return self._get_latest_from_db(reference_date=cur_date, max_age_days=max_age_days)
 
     def _parse_participant_csv(self, content, date_str):
         """Parse the NSE CSV by field name (with a strict legacy-order fallback)."""
@@ -399,21 +387,9 @@ class FreeDataFetcher:
                 f"maximum allowed is {max_latest_age_days} days."
             )
         if len(normalized_dates) < 3:
-            latest_completed = latest_completed_nse_session()
-            if reference_date > latest_completed and is_nse_equity_trading_day(reference_date):
-                timing_note = (
-                    f" The {reference_date.isoformat()} NSE session has not closed yet; its OI archive is "
-                    "normally expected only after the 15:30 IST close. Rerun after the close/archive publication."
-                )
-            else:
-                timing_note = (
-                    f" The latest completed NSE session is {latest_completed.isoformat()}; "
-                    "retry when that session's official OI archive is reachable."
-                )
             raise ValueError(
                 f"Need at least 3 recent, continuous participant OI dates; found {len(normalized_dates)} "
-                "before the next large history gap. Do not mix older snapshots across that gap."
-                + timing_note
+                "before the next large history gap."
             )
         for date_value, group in df.groupby("date", sort=True):
             self._validate_oi_records(group.to_dict(orient="records"), expected_date=date_value)

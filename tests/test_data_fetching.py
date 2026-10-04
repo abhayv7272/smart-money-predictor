@@ -15,7 +15,6 @@ import fetcher as fetcher_module
 from calculator import InstitutionalCalculator
 from fetcher import FreeDataFetcher, OI_FIELDS, StaleParticipantDataError
 from market_data import MarketDataError, download_yahoo, normalize_yahoo_frame
-from nse_calendar import is_nse_equity_trading_day, latest_completed_nse_session
 
 
 PARTICIPANTS = ("Client", "DII", "FII", "Pro")
@@ -156,36 +155,11 @@ class ParticipantOITests(unittest.TestCase):
         self.assertEqual(result["date"].nunique(), 3)
         self.assertGreaterEqual(pd.to_datetime(result["date"].min()), pd.Timestamp(self.today - dt.timedelta(days=3)))
 
-    def test_three_sessions_across_october_holiday_remain_a_valid_window(self):
-        recent_sessions = [dt.date(2026, 10, 5), dt.date(2026, 10, 1), dt.date(2026, 9, 30)]
-        rows = []
-        for index, session_date in enumerate(recent_sessions):
-            rows.extend(make_oi_records(session_date, 1000 + index))
-        rows.extend(make_oi_records(dt.date(2024, 10, 1), 900))
+    def test_too_few_recent_dates_before_large_gap_fails_explicitly(self):
+        rows = make_oi_records(self.today) + make_oi_records(self.today - dt.timedelta(days=1))
+        rows += make_oi_records(self.today - dt.timedelta(days=730))
         pd.DataFrame(rows).to_sql("participant_oi_raw", sqlite_connect(self.db_path), index=False)
-
-        result = self.fetcher.fetch_recent_history(days_count=10, max_latest_age_days=10000)
-
-        self.assertEqual(set(result["date"]), {session.isoformat() for session in recent_sessions})
-        self.assertEqual(result["date"].nunique(), 3)
-
-    def test_two_recent_sessions_before_large_gap_still_block_signal_generation(self):
-        latest = latest_completed_nse_session()
-        previous = latest - dt.timedelta(days=1)
-        while not is_nse_equity_trading_day(previous):
-            previous -= dt.timedelta(days=1)
-        rows = make_oi_records(latest) + make_oi_records(previous)
-        rows += make_oi_records(previous - dt.timedelta(days=730))
-        pd.DataFrame(rows).to_sql("participant_oi_raw", sqlite_connect(self.db_path), index=False)
-
-        with self.assertRaisesRegex(ValueError, "found 2 before the next large history gap"):
-            self.fetcher.fetch_recent_history(days_count=10)
-
-    def test_one_recent_session_before_large_gap_still_fails_explicitly(self):
-        latest = latest_completed_nse_session()
-        rows = make_oi_records(latest) + make_oi_records(latest - dt.timedelta(days=730))
-        pd.DataFrame(rows).to_sql("participant_oi_raw", sqlite_connect(self.db_path), index=False)
-        with self.assertRaisesRegex(ValueError, "found 1 before the next large history gap"):
+        with self.assertRaisesRegex(ValueError, "before the next large history gap"):
             self.fetcher.fetch_recent_history(days_count=10)
 
     def test_nse_requests_have_timeouts_and_fallback_is_validated(self):
@@ -199,57 +173,6 @@ class ParticipantOITests(unittest.TestCase):
         for call in session.get.call_args_list:
             self.assertEqual(call.kwargs["timeout"], (3.05, 7))
 
-    def test_nse_archive_search_skips_2026_october_holiday_and_weekend(self):
-        reference = dt.date(2026, 10, 5)
-        self.fetcher._save_to_db(make_oi_records(reference))
-        session = Mock()
-        session.get.return_value = Mock(status_code=404, content=b"")
-        self.fetcher.http_session = session
-
-        result = self.fetcher.fetch_latest_participant_oi(target_date=reference, max_business_days=2)
-
-        requested_tokens = [call.args[0].rsplit("_", 1)[-1].removesuffix(".csv") for call in session.get.call_args_list]
-        self.assertEqual(requested_tokens, ["05102026", "01102026"])
-        self.assertEqual(result["source"], "sqlite_cache")
-
-    def test_default_nse_lookup_starts_from_latest_completed_session(self):
-        search_date = latest_completed_nse_session()
-        self.fetcher._save_to_db(make_oi_records(search_date))
-        session = Mock()
-        session.get.return_value = Mock(status_code=404, content=b"")
-        self.fetcher.http_session = session
-
-        with patch.object(fetcher_module, "latest_completed_nse_session", return_value=search_date):
-            result = self.fetcher.fetch_latest_participant_oi(max_business_days=1)
-
-        requested_token = session.get.call_args.args[0].rsplit("_", 1)[-1].removesuffix(".csv")
-        self.assertEqual(requested_token, search_date.strftime("%d%m%Y"))
-        self.assertEqual(result["date"], search_date.isoformat())
-        self.assertEqual(result["age_days"], (self.today - search_date).days)
-
-    def test_default_nse_lookup_targets_october_fifth_after_close(self):
-        session_date = dt.date(2026, 10, 5)
-        columns = [
-            "Client Type", "Future Index Long", "Future Index Short", "Future Stock Long", "Future Stock Short",
-            "Option Index Call Long", "Option Index Put Long", "Option Index Call Short", "Option Index Put Short",
-            "Option Stock Call Long", "Option Stock Put Long", "Option Stock Call Short", "Option Stock Put Short",
-            "Total Long Contracts", "Total Short Contracts",
-        ]
-        lines = [",".join(columns)]
-        lines.extend(participant + "," + ",".join(["10"] * 14) for participant in PARTICIPANTS)
-        session = Mock()
-        session.get.return_value = Mock(status_code=200, content=("\n".join(lines)).encode())
-        self.fetcher.http_session = session
-
-        with patch.object(fetcher_module, "latest_completed_nse_session", return_value=session_date), \
-             patch.object(self.fetcher, "_coerce_date", return_value=session_date):
-            result = self.fetcher.fetch_latest_participant_oi(max_business_days=1)
-
-        requested_url = session.get.call_args.args[0]
-        self.assertIn("fao_participant_oi_05102026.csv", requested_url)
-        self.assertEqual(result["date"], session_date.isoformat())
-        self.assertEqual(result["data_status"], "live")
-
 
 def sqlite_connect(path):
     import sqlite3
@@ -257,55 +180,15 @@ def sqlite_connect(path):
 
 
 class CalculatorIntegrityTests(unittest.TestCase):
-    def test_october_holiday_gap_preserves_three_session_t2_context(self):
-        rows = []
-        for session_date, net in (
-            (dt.date(2026, 10, 5), 1300),
-            (dt.date(2026, 10, 1), 1200),
-            (dt.date(2026, 9, 30), 1100),
-        ):
-            rows.extend(make_oi_records(session_date, net))
-
-        result = InstitutionalCalculator(pd.DataFrame(rows)).calculate_latest_sheet()
-
-        self.assertEqual(result["date"], "2026-10-05")
-        self.assertIsNotNone(result["sheet_sections"]["Index Futures"][0]["carried_t2"])
-        self.assertIsNone(result["fii_stk_flow_3d"])
-        self.assertIsNone(result["fii_stk_flow_5d"])
-        self.assertEqual(result["fii_stk_flow_3d_sample_days"], 2)
-        self.assertEqual(result["fii_stk_flow_5d_sample_days"], 2)
-
     def test_flow_windows_are_exact_and_not_extrapolated(self):
         today = dt.datetime.now(ZoneInfo("Asia/Kolkata")).date()
         three_dates = []
         for offset, net in enumerate((1000, 1010, 1020)):
             three_dates.extend(make_oi_records(today - dt.timedelta(days=offset), net))
         short_result = InstitutionalCalculator(pd.DataFrame(three_dates)).calculate_latest_sheet()
-        self.assertIsNone(short_result["fii_stk_flow_3d"])
-        self.assertIsNone(short_result["fii_stk_flow_5d"])
+        self.assertEqual(short_result["fii_stk_flow_3d"], 0)
         self.assertFalse(short_result["fii_stk_flow_3d_complete"])
-        self.assertFalse(short_result["fii_stk_flow_5d_complete"])
         self.assertEqual(short_result["fii_stk_flow_3d_sample_days"], 2)
-        self.assertEqual(short_result["cis_score"], 0.0)
-
-        # Even if extrapolating the two observed changes would cross the +20k
-        # threshold, an incomplete 3-day window is unavailable and scores no flow tier.
-        two_changes = []
-        for offset, net in enumerate((52200, 41200, 30200)):
-            two_changes.extend(make_oi_records(today - dt.timedelta(days=offset), net))
-        incomplete_result = InstitutionalCalculator(pd.DataFrame(two_changes)).calculate_latest_sheet()
-        self.assertIsNone(incomplete_result["fii_stk_flow_3d"])
-        self.assertEqual(incomplete_result["cis_score"], 0.0)
-        self.assertNotIn("FII 3-Day Stock Accumulation (+)", [name for name, _ in incomplete_result["cis_breakdown"]])
-
-        four_dates = []
-        for offset, net in enumerate((40000, 30000, 20000, 10000)):
-            four_dates.extend(make_oi_records(today - dt.timedelta(days=offset), net))
-        three_day_result = InstitutionalCalculator(pd.DataFrame(four_dates)).calculate_latest_sheet()
-        self.assertEqual(three_day_result["fii_stk_flow_3d"], 30000)
-        self.assertIsNone(three_day_result["fii_stk_flow_5d"])
-        self.assertEqual(three_day_result["cis_score"], 2.0)
-        self.assertIn("FII 3-Day Stock Accumulation (+)", [name for name, _ in three_day_result["cis_breakdown"]])
 
         six_dates = []
         for offset, net in enumerate((1050, 1040, 1030, 1020, 1010, 1000)):
