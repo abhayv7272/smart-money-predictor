@@ -1,0 +1,45 @@
+name: Daily OI Prediction
+
+on:
+  schedule:
+    # 14:15 UTC = 19:45 IST, Mon-Fri (NSE file ~19:00-20:00 IST publish hoti hai)
+    - cron: "15 14 * * 1-5"
+    # retry run 21:15 IST agar pehli baar file late thi
+    - cron: "45 15 * * 1-5"
+  workflow_dispatch: {}
+  # cron-job.org se trigger (POST api.github.com/repos/<user>/<repo>/dispatches)
+  repository_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Run prediction
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+        run: cd predictor && python run.py
+
+      - name: Commit results
+        run: |
+          git config user.name "oi-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git pull --rebase --autostash || true
+          git add data/ output/
+          git diff --cached --quiet || git commit -m "Daily prediction $(date -u +%F)"
+          git push
