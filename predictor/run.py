@@ -570,9 +570,13 @@ Kyun? {D[0]} — isliye {D[1]}.
                    inline_charts=inline, repo_url=repo_url, warn=stale_warn, horizon=hz_email,
                    scorecard=card_email, alert=alert, position=pos_email,
                    bnf=bnf_email, stocks=stk_rows, sector=sect_email, gems=gem_email)
-        send_email(ctx, OUT)
+        ok = send_email(ctx, OUT)
+        if not ok:
+            print("::warning::Email report nahi bhej paya — upar wale [email] logs dekho "
+                  "(secrets: GMAIL_USER, GMAIL_APP_PASSWORD, MAIL_TO).")
     except Exception as e:
         print(f"[email] module fail: {e}")
+        print(f"::error::Email report nahi bhej paya — emailer crash: {e}")
 
     print(json.dumps(p, indent=2, ensure_ascii=False))
 
