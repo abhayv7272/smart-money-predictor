@@ -7,7 +7,8 @@ Secrets (GitHub repo -> Settings -> Secrets and variables -> Actions):
   MAIL_TO            = (optional) kis par bhejna hai; default = GMAIL_USER
 
 Design goals: email-client-safe (sirf inline CSS + tables), mobile friendly (<=640px),
-charts CID-inline attached. Agar secrets nahi mile to silently skip (run kabhi fail nahi).
+charts CID-inline attached. Agar secrets nahi mile ya Gmail reject kare to skip karo +
+GitHub Actions mein ::warning::/::error:: annotation (run kabhi fail nahi, par dikhega zaroor).
 """
 from __future__ import annotations
 import os
@@ -692,15 +693,29 @@ def send_email(ctx: dict, out_dir: Path) -> bool:
         print(f"[email] preview save fail: {e}")
 
     user = (os.environ.get("GMAIL_USER") or os.environ.get("EMAIL_USER")
-            or os.environ.get("SMTP_USER") or "")
+            or os.environ.get("SMTP_USER") or "").strip()
     pwd = (os.environ.get("GMAIL_APP_PASSWORD") or os.environ.get("GMAIL_PASS")
            or os.environ.get("EMAIL_PASS") or os.environ.get("SMTP_PASS")
            or os.environ.get("APP_PASSWORD") or "")
-    to = os.environ.get("MAIL_TO") or user
+    # BUG FIX: secret copy-paste karte waqt trailing space / newline aa jaati hai →
+    # Gmail auth fail ho jaata tha aur mail silently nahi jaati thi. Sab whitespace hata do.
+    pwd = "".join(pwd.split())
+    to = (os.environ.get("MAIL_TO") or "").strip() or user
+    to = ",".join(x.strip() for x in to.split(",") if x.strip())
+
+    def _mask(s: str) -> str:
+        return (s[:3] + "***" + s[-4:]) if len(s) > 8 else "***"
+
     if not user or not pwd:
-        print("[email] GMAIL_USER / GMAIL_APP_PASSWORD secrets nahi mile — email skip")
+        missing = [n for n, v in (("GMAIL_USER", user), ("GMAIL_APP_PASSWORD", pwd)) if not v]
+        print(f"[email] missing secrets: {', '.join(missing)} — email skip")
+        print("::warning::Email nahi bhej paya — repo Secrets (Settings → Secrets and variables → "
+              "Actions) mein ye add karo: " + ", ".join(missing) + " (optional: MAIL_TO). "
+              "GMAIL_USER = tumhara gmail address; GMAIL_APP_PASSWORD = 16-character App Password "
+              "(Google Account → Security → 2-Step Verification ON karo → App passwords → naya banao). "
+              "Normal Gmail login password nahi chalega.")
         return False
-    pwd = pwd.replace(" ", "")
+    print(f"[email] config ok: user={_mask(user)} | to={_mask(to)} | app_password_len={len(pwd)}")
 
     p = ctx["p"]
     _, _, label, emoji = KEY_THEME.get(ctx["key"], KEY_THEME["WAIT"])
@@ -728,6 +743,14 @@ def send_email(ctx: dict, out_dir: Path) -> bool:
         except Exception as e:
             print(f"[email] chart attach fail ({path}): {e}")
 
+    def _auth_fail(stage, e):
+        print(f"[email] AUTH FAIL ({stage}): {e}")
+        print("::error::Gmail login reject ho gaya — GMAIL_USER ya GMAIL_APP_PASSWORD galat hai. "
+              "Yaad rakho: App Password = 16-character wala (Google Account → Security → "
+              "2-Step Verification ON karo → App passwords → naya banao). Apna normal Gmail "
+              "login password nahi chalega. Secret mein extra space/newline nahi honi chahiye "
+              "(ab woh automatically hata di jaati hai).")
+
     try:
         c = ssl.create_default_context()
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=c, timeout=30) as s:
@@ -735,8 +758,11 @@ def send_email(ctx: dict, out_dir: Path) -> bool:
             s.sendmail(user, [x.strip() for x in to.split(",")], msg.as_string())
         print(f"[email] sent -> {to}")
         return True
+    except smtplib.SMTPAuthenticationError as e:
+        _auth_fail("465", e)
+        return False
     except Exception as e:
-        print(f"[email] send fail: {e}")
+        print(f"[email] send fail (465): {e}")
         # dusri koshish: STARTTLS 587 (kuch networks 465 block karte hain)
         try:
             with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as s:
@@ -745,6 +771,12 @@ def send_email(ctx: dict, out_dir: Path) -> bool:
                 s.sendmail(user, [x.strip() for x in to.split(",")], msg.as_string())
             print(f"[email] sent via 587 -> {to}")
             return True
+        except smtplib.SMTPAuthenticationError as e2:
+            _auth_fail("587", e2)
+            return False
         except Exception as e2:
             print(f"[email] 587 bhi fail: {e2}")
+            print("::error::Email nahi bhej paya — Gmail SMTP (465 + 587) dono par fail. "
+                  "Check karo: GMAIL_USER / GMAIL_APP_PASSWORD secrets sahi hain? "
+                  f"Error: {e2}")
             return False
