@@ -142,15 +142,12 @@ Kyun? Market ka trend NEECHE hai (Nifty apni 200-din ki average se niche) — is
 > 🔴 = sabse kamzor 2 sectors — yahan naya paisa mat lagao.
 > 📏 Rule yaad rakho: KAB/KITNA upar ka MASTER SIGNAL batata hai — ye section sirf **KAHAN** (kaunsa sector) batata hai. Stop-loss -10% yahan bhi.
 
-## 💎 GEM SCANNER — 25-40% MOVER ka setup AAJ FIRE (2026-10-08)
+## 💎 GEM SCANNER — aaj koi setup nahi (2026-10-08)
 
 **Pattern (15y decoded):** 52w-high se **40%+ gira** + **EMA50 wapas reclaim** (stabilize ho gaya) + **volume 1.5x surge** (koi bada jama kar raha). Test: aise setup ka **32.4%** chance hota hai +25% move ka (normal stock ka sirf 10.7%).
 
-| Grade/Stock | Price | 52w-high se | Volume | Reclaim | Stop (-12%) | Target (+25%) |
-|---|---|---|---|---|---|---|
-| 💎A **TRENT** (Consumer) | 2,876.3 | -40.2% | 2.18x | 3d | **2,531.1** | **3,595.4** |
-
-**Trade plan (tested):** entry agle din · stop **-12%** · target **+25%** · max hold **3 mahine**. Upgraded 15y stats (fresh+penny-guard): **IS +6.7%/55% win, OOS +11.5%/75% win**. Winner anatomy: median **24 din** mein target; jeetne wale bhi pehle ~4% dubte hain — **ghabrao mat, stop -12 hi bharosa hai** (15% winners -8% tak gaye the). ⚠️ Bear saal mein ye rule bhi haarta hai (2011: -12%) — kitna lagana MASTER SIGNAL ka deploy % tay karega. **Ek gem = portfolio ka 5-10% max.** Grade B (purana reclaim >10 din) = chhod do (OOS sirf +1.9%/38%).
+Aaj koi stock teeno sharten poori nahi karta — **ye normal hai** (ye setup mahine mein ~1 baar aata hai;
+isi selectivity se edge hai).
 
 **📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: ⏳ naya
 
@@ -180,7 +177,7 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 4. Ye system 10 mein se 7-8 baar sahi hai — **2-3 baar galat bhi hoga.** Isliye upar ke niyam hi tumhara asli bachav hain.
 5. Kya kharidna hai confusion ho to: **NIFTYBEES** (Nifty 50 ETF) — isi index par ye pura system bana hai.
 
-*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-08T16:00:41+00:00 UTC*
+*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-08T19:59:58+00:00 UTC*
 
 ---
 
