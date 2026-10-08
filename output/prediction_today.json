@@ -5,23 +5,25 @@
   "MASTER_deploy_detail": "Nifty 200DMA ke niche + OI unclear \u2014 capital bachao. Bounce aayega to ACCUMULATE/STRONG signal pakad lega.",
   "bottom_signal_B3": "\ud83d\udfe2 ACTIVE",
   "top_warning_T4": "off",
-  "data_date": "2026-10-07",
+  "data_date": "2026-10-08",
   "price_date": "2026-10-08",
   "nifty_close": 22281.95,
   "dma200": 24288.19,
-  "score_v2": 1.08,
+  "score_v2": 1.96,
   "bucket": "MILD_UP",
   "components": {
-    "s_pro": 0.54,
-    "s_stk": 0.06,
-    "s_fiiC": 1.33,
-    "s_opt": -1.74,
-    "s_dii": -0.7
+    "s_pro": 0.79,
+    "s_stk": 0.27,
+    "s_fiiC": 1.57,
+    "s_opt": -2.09,
+    "s_dii": -0.57
   },
   "layer1_base_allocation": "30% (Nifty < 200DMA \u2014 defensive)",
   "layer2_new_entry": "HALF size",
   "layer3_outlook_40d": "+2.2% avg, 70% up",
   "layer3_outlook_60d": "+3.2% avg, 71% up",
-  "generated_utc": "2026-10-08T09:42:35+00:00",
-  "new_oi_dates_added": []
+  "generated_utc": "2026-10-08T14:22:03+00:00",
+  "new_oi_dates_added": [
+    "2026-10-08"
+  ]
 }
