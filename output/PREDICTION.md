@@ -97,7 +97,7 @@ Kyun? Market girawat mein hai LEKIN bade khiladi kharid rahe hain — dheere-dhe
 
 ## 🏦 BANK NIFTY — WAHI SIGNAL, DUSRA INDEX (15-saal verified)
 
-**Aaj:** Bank Nifty **55,316** (-0.30% din ka)
+**Aaj:** Bank Nifty **55,810** (+0.89% din ka)
 
 | Horizon | Aaj ke bucket (STRONG UP) ke baad BNF | Baseline |
 |---|---|---|
@@ -147,7 +147,7 @@ Kyun? Market girawat mein hai LEKIN bade khiladi kharid rahe hain — dheere-dhe
 Aaj koi stock teeno sharten poori nahi karta — **ye normal hai** (ye setup mahine mein ~1 baar aata hai;
 isi selectivity se edge hai).
 
-**📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: 🔄 OPEN +2% (5d) · 2026-10-09 TRENT: 🔄 OPEN +3% (4d) · 2026-10-14 TATAELXSI: 🔄 OPEN +8% (1d)
+**📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: 🔄 OPEN +3% (5d) · 2026-10-09 TRENT: 🔄 OPEN +3% (4d) · 2026-10-14 TATAELXSI: 🔄 OPEN +6% (1d)
 
 > 🔎 *Imandari note: backtest aaj ke zinda stocks par hai (survivorship) — isliye real expectancy thodi kam maan ke chalo; position sizing (5-10% max) hi asli suraksha hai. Midcaps par ye pattern TEST KIYA aur FAIL hua (+1.2% vs +6.7-11.5%) — gems sirf LARGE-CAP mein khoje jayenge, kyunki quality ka floor wahi hota hai.*
 
@@ -176,7 +176,7 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 4. Ye system 10 mein se 7-8 baar sahi hai — **2-3 baar galat bhi hoga.** Isliye upar ke niyam hi tumhara asli bachav hain.
 5. Kya kharidna hai confusion ho to: **NIFTYBEES** (Nifty 50 ETF) — isi index par ye pura system bana hai.
 
-*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-15T18:16:56+00:00 UTC*
+*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-15T19:24:35+00:00 UTC*
 
 ---
 
