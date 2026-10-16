@@ -96,7 +96,7 @@ Kyun? Market ka trend NEECHE hai (Nifty apni 200-din ki average se niche) — is
 
 ## 🏦 BANK NIFTY — WAHI SIGNAL, DUSRA INDEX (15-saal verified)
 
-**Aaj:** Bank Nifty **55,810** (+0.89% din ka)
+**Aaj:** Bank Nifty **55,844** (+0.06% din ka)
 
 | Horizon | Aaj ke bucket (MILD UP) ke baad BNF | Baseline |
 |---|---|---|
@@ -146,7 +146,7 @@ Kyun? Market ka trend NEECHE hai (Nifty apni 200-din ki average se niche) — is
 Aaj koi stock teeno sharten poori nahi karta — **ye normal hai** (ye setup mahine mein ~1 baar aata hai;
 isi selectivity se edge hai).
 
-**📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: 🔄 OPEN +3% (6d) · 2026-10-09 TRENT: 🔄 OPEN +3% (5d) · 2026-10-14 TATAELXSI: 🔄 OPEN +12% (2d)
+**📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: 🔄 OPEN +2% (6d) · 2026-10-09 TRENT: 🔄 OPEN +3% (5d) · 2026-10-14 TATAELXSI: 🔄 OPEN +8% (2d)
 
 > 🔎 *Imandari note: backtest aaj ke zinda stocks par hai (survivorship) — isliye real expectancy thodi kam maan ke chalo; position sizing (5-10% max) hi asli suraksha hai. Midcaps par ye pattern TEST KIYA aur FAIL hua (+1.2% vs +6.7-11.5%) — gems sirf LARGE-CAP mein khoje jayenge, kyunki quality ka floor wahi hota hai.*
 
@@ -176,7 +176,7 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 4. Ye system 10 mein se 7-8 baar sahi hai — **2-3 baar galat bhi hoga.** Isliye upar ke niyam hi tumhara asli bachav hain.
 5. Kya kharidna hai confusion ho to: **NIFTYBEES** (Nifty 50 ETF) — isi index par ye pura system bana hai.
 
-*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-16T18:02:25+00:00 UTC*
+*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-16T19:02:02+00:00 UTC*
 
 ---
 
