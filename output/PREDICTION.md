@@ -94,7 +94,7 @@ Kyun? Market ka trend NEECHE hai (Nifty apni 200-din ki average se niche) — is
 
 ## 🏦 BANK NIFTY — WAHI SIGNAL, DUSRA INDEX (15-saal verified)
 
-**Aaj:** Bank Nifty **55,844** (+0.06% din ka)
+**Aaj:** Bank Nifty **55,488** (-0.64% din ka)
 
 | Horizon | Aaj ke bucket (MILD UP) ke baad BNF | Baseline |
 |---|---|---|
@@ -174,7 +174,7 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 4. Ye system 10 mein se 7-8 baar sahi hai — **2-3 baar galat bhi hoga.** Isliye upar ke niyam hi tumhara asli bachav hain.
 5. Kya kharidna hai confusion ho to: **NIFTYBEES** (Nifty 50 ETF) — isi index par ye pura system bana hai.
 
-*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-19T19:55:52+00:00 UTC*
+*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-19T20:44:41+00:00 UTC*
 
 ---
 
