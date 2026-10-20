@@ -112,27 +112,27 @@ Kyun? Market ka trend NEECHE hai (Nifty apni 200-din ki average se niche) — is
 
 | Rank | Sector | 6-mahina momentum |
 |---|---|---|
-| 1 | 🟢 **IT** | +12.5% |
-| 2 | 🟢 **Telecom** | +11.5% |
+| 1 | 🟢 **IT** | +15.5% |
+| 2 | 🟢 **Telecom** | +10.8% |
 | 3 | · **Realty** | +3.9% |
-| 4 | · **Pharma** | +2.2% |
-| 5 | · **Auto** | +1.5% |
-| 6 | · **Bank** | +0.7% |
-| 7 | · **Infra** | -0.6% |
-| 8 | · **CapGoods** | -3.0% |
-| 9 | · **Consumer** | -3.2% |
-| 10 | · **Energy** | -5.7% |
-| 11 | · **Finance** | -10.1% |
-| 12 | · **Cement** | -10.4% |
-| 13 | · **FMCG** | -12.9% |
-| 14 | 🔴 **Metal** | -16.0% |
-| 15 | 🔴 **Power** | -18.2% |
+| 4 | · **Pharma** | +2.8% |
+| 5 | · **Auto** | +1.8% |
+| 6 | · **Bank** | +1.2% |
+| 7 | · **Infra** | -0.0% |
+| 8 | · **CapGoods** | -1.5% |
+| 9 | · **Consumer** | -3.4% |
+| 10 | · **Energy** | -4.9% |
+| 11 | · **Finance** | -10.4% |
+| 12 | · **Cement** | -11.3% |
+| 13 | · **FMCG** | -13.8% |
+| 14 | 🔴 **Metal** | -16.8% |
+| 15 | 🔴 **Power** | -18.5% |
 
 **Kya karna:** Agar stocks lene hain to in 2 sectors ke stocks mein lagao — **IT + Telecom**. 15-saal test: in top-2 sectors ka basket, bullish signal ke waqt, baaki market se **+0.8 se +1.0pp (40 din) / +0.8 se +1.4pp (60 din)** aage raha (out-of-sample bhi). ⚠️ Lekin: sector ke 1-2 stocks chunne ka edge test mein NAHI mila — **sector ke 3-4 bade stocks mein barabar baanto** (ya ETF jahan available: IT→ITBEES).
 
 **Top-2 sectors ke stocks (RS order, sirf jankari ke liye):**
-- **IT:** COFORGE (+60%), TECHM (+29%), OFSS (+22%), PERSISTENT (+14%), MPHASIS (+13%), HCLTECH (+11%)
-- **Telecom:** IDEA (+31%), BHARTIARTL (+5%), INDUSTOWER (-2%)
+- **IT:** COFORGE (+68%), TECHM (+34%), PERSISTENT (+20%), MPHASIS (+18%), OFSS (+17%), HCLTECH (+16%)
+- **Telecom:** IDEA (+29%), BHARTIARTL (+5%), INDUSTOWER (-1%)
 
 > 🔴 = sabse kamzor 2 sectors — yahan naya paisa mat lagao.
 > 📏 Rule yaad rakho: KAB/KITNA upar ka MASTER SIGNAL batata hai — ye section sirf **KAHAN** (kaunsa sector) batata hai. Stop-loss -10% yahan bhi.
@@ -144,11 +144,11 @@ Kyun? Market ka trend NEECHE hai (Nifty apni 200-din ki average se niche) — is
 Aaj koi stock teeno sharten poori nahi karta — **ye normal hai** (ye setup mahine mein ~1 baar aata hai;
 isi selectivity se edge hai).
 
-**📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: 🔄 OPEN +3% (7d) · 2026-10-09 TRENT: 🔄 OPEN +3% (6d) · 2026-10-14 TATAELXSI: 🔄 OPEN +12% (3d)
+**📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: 🔄 OPEN +0% (7d) · 2026-10-09 TRENT: 🔄 OPEN +1% (6d) · 2026-10-14 TATAELXSI: 🔄 OPEN +11% (3d)
 
 > 🔎 *Imandari note: backtest aaj ke zinda stocks par hai (survivorship) — isliye real expectancy thodi kam maan ke chalo; position sizing (5-10% max) hi asli suraksha hai. Midcaps par ye pattern TEST KIYA aur FAIL hua (+1.2% vs +6.7-11.5%) — gems sirf LARGE-CAP mein khoje jayenge, kyunki quality ka floor wahi hota hai.*
 
-## 🏆 STOCK SWEEP — NIFTY 50 KE SABSE STRONG STOCKS (2026-10-16)
+## 🏆 STOCK SWEEP — NIFTY 50 KE SABSE STRONG STOCKS (2026-10-19)
 
 **Rule (15-saal tested):** A+ = price EMA50 ke upar **+** RS top-10% (126-din return, 50 stocks mein).
 In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)** se beat kiya
@@ -156,11 +156,13 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 
 | Stock | Grade | RS rank /100 | 1-mahina return | Price |
 |---|---|---|---|---|
-| **DIVISLAB** | A+ ⭐ | 100 | -1.9% | 9,144 |
-| **TECHM** | A+ ⭐ | 97 | +14.7% | 1,790 |
-| **KOTAKBANK** | A+ ⭐ | 95 | +7.4% | 447 |
-| **HCLTECH** | A+ ⭐ | 91 | +9.7% | 1,380 |
-| BHARTIARTL | B (watch) | 79 | +3.8% | 1,905 |
+| **DIVISLAB** | A+ ⭐ | 100 | -3.1% | 9,087 |
+| **TECHM** | A+ ⭐ | 97 | +15.7% | 1,779 |
+| **KOTAKBANK** | A+ ⭐ | 95 | +7.2% | 442 |
+| **HCLTECH** | A+ ⭐ | 91 | +10.5% | 1,380 |
+| HEROMOTOCO | B (watch) | 85 | -1.1% | 5,230 |
+| ICICIBANK | B (watch) | 81 | +3.1% | 1,381 |
+| BHARTIARTL | B (watch) | 79 | -1.0% | 1,875 |
 
 > 💡 **Kaise use karein:** ye "kya kharidna" ka shortlist hai — lekin **kab/kitna** upar wala MASTER
 > SIGNAL hi batayega. Entry signal weak ho to shortlist sirf watchlist hai. Stop-loss -10% yahan bhi pakka.
@@ -174,7 +176,7 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 4. Ye system 10 mein se 7-8 baar sahi hai — **2-3 baar galat bhi hoga.** Isliye upar ke niyam hi tumhara asli bachav hain.
 5. Kya kharidna hai confusion ho to: **NIFTYBEES** (Nifty 50 ETF) — isi index par ye pura system bana hai.
 
-*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-19T20:44:41+00:00 UTC*
+*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-20T18:28:37+00:00 UTC*
 
 ---
 
