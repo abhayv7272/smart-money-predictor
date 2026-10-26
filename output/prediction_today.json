@@ -5,23 +5,25 @@
   "MASTER_deploy_detail": "Bear phase LEKIN OI strongly bullish \u2014 dheere-dheere kharidne ka zone. [15y: 72% win @40d, +2.8%]",
   "bottom_signal_B3": "\ud83d\udfe2 ACTIVE",
   "top_warning_T4": "off",
-  "data_date": "2026-10-23",
-  "price_date": "2026-10-23",
-  "nifty_close": 22600.0,
-  "dma200": 24125.61,
-  "score_v2": 4.45,
+  "data_date": "2026-10-26",
+  "price_date": "2026-10-26",
+  "nifty_close": 22753.2,
+  "dma200": 24108.73,
+  "score_v2": 4.24,
   "bucket": "STRONG_UP",
   "components": {
-    "s_pro": 0.86,
-    "s_stk": 1.84,
-    "s_fiiC": 0.85,
-    "s_opt": -1.14,
-    "s_dii": -0.36
+    "s_pro": 1.05,
+    "s_stk": 2.37,
+    "s_fiiC": -0.36,
+    "s_opt": -0.72,
+    "s_dii": -0.3
   },
   "layer1_base_allocation": "30% (Nifty < 200DMA \u2014 defensive)",
   "layer2_new_entry": "FULL size \u2014 naye swing entries allowed",
   "layer3_outlook_40d": "+2.7% avg, 75% up",
   "layer3_outlook_60d": "+4.1% avg, 78% up",
-  "generated_utc": "2026-10-23T19:34:45+00:00",
-  "new_oi_dates_added": []
+  "generated_utc": "2026-10-26T19:58:14+00:00",
+  "new_oi_dates_added": [
+    "2026-10-26"
+  ]
 }
