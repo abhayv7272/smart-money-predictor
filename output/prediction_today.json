@@ -1,27 +1,29 @@
 {
-  "MASTER_entry_signal": "\ud83d\udfe1 WEAK \u2014 chhota lagao",
-  "MASTER_entry_detail": "OI mild bullish. Sirf selective/chhoti entries. [15y: 70% win @40d, +2.3% avg]",
-  "MASTER_deploy_signal": "\ud83d\udee1\ufe0f DEFENSIVE (30%)",
-  "MASTER_deploy_detail": "Nifty 200DMA ke niche + OI unclear \u2014 capital bachao. Bounce aayega to ACCUMULATE/STRONG signal pakad lega.",
+  "MASTER_entry_signal": "\ud83d\udfe2 MEDIUM \u2014 lagao, half size",
+  "MASTER_entry_detail": "OI strongly bullish (STRONG_UP) lekin crash-dip nahi. Half-size entries. [15y: 74% win @40d, +2.6% avg]",
+  "MASTER_deploy_signal": "\ud83d\uded2 ACCUMULATE (60%)",
+  "MASTER_deploy_detail": "Bear phase LEKIN OI strongly bullish \u2014 dheere-dheere kharidne ka zone. [15y: 72% win @40d, +2.8%]",
   "bottom_signal_B3": "off",
   "top_warning_T4": "off",
-  "data_date": "2026-10-29",
-  "price_date": "2026-10-29",
-  "nifty_close": 22936.75,
-  "dma200": 24057.03,
-  "score_v2": 2.3,
-  "bucket": "MILD_UP",
+  "data_date": "2026-10-30",
+  "price_date": "2026-10-30",
+  "nifty_close": 23053.1,
+  "dma200": 24041.4,
+  "score_v2": 3.09,
+  "bucket": "STRONG_UP",
   "components": {
-    "s_pro": -0.28,
-    "s_stk": 2.01,
-    "s_fiiC": 0.28,
-    "s_opt": -0.43,
-    "s_dii": -0.29
+    "s_pro": 0.2,
+    "s_stk": 1.91,
+    "s_fiiC": 0.47,
+    "s_opt": -0.73,
+    "s_dii": -0.3
   },
   "layer1_base_allocation": "30% (Nifty < 200DMA \u2014 defensive)",
-  "layer2_new_entry": "HALF size",
-  "layer3_outlook_40d": "+2.2% avg, 70% up",
-  "layer3_outlook_60d": "+3.2% avg, 71% up",
-  "generated_utc": "2026-10-29T20:38:25+00:00",
-  "new_oi_dates_added": []
+  "layer2_new_entry": "FULL size \u2014 naye swing entries allowed",
+  "layer3_outlook_40d": "+2.7% avg, 75% up",
+  "layer3_outlook_60d": "+4.1% avg, 78% up",
+  "generated_utc": "2026-10-30T19:20:15+00:00",
+  "new_oi_dates_added": [
+    "2026-10-30"
+  ]
 }
