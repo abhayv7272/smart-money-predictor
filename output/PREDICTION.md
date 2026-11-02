@@ -1,7 +1,5 @@
-
-> # 🚨 SIGNAL BADLA AAJ: MILD UP -> STRONG UP | entry WEAK -> MEDIUM
 # 🙋 AAJ KA SIGNAL — Simple Bhasha Mein
-### Date: 2026-10-30 (shaam ke NSE data se) | Nifty: 23053.1
+### Date: 2026-11-02 (shaam ke NSE data se) | Nifty: 23440.8
 
 ---
 
@@ -28,7 +26,7 @@ Kyun? Market girawat mein hai LEKIN bade khiladi kharid rahe hain — dheere-dhe
 | Cheez | Status | Matlab |
 |---|---|---|
 | Market ka trend | **NEECHE ⬇️** | Nifty apni 200-din ki average price se niche hai = kamzor |
-| Bade khiladi (FII/operators) | **STRONG UP** | score +3.09 (+2.5 se upar = zor se kharid rahe; -2.5 se niche = zor se bech rahe) |
+| Bade khiladi (FII/operators) | **STRONG UP** | score +3.60 (+2.5 se upar = zor se kharid rahe; -2.5 se niche = zor se bech rahe) |
 | 🟢 Bottom signal | **off** | abhi nahi |
 | 🔴 Top warning | **off** | abhi nahi |
 
@@ -48,15 +46,15 @@ Kyun? Market girawat mein hai LEKIN bade khiladi kharid rahe hain — dheere-dhe
 
 > 💡 **Matlab:** aaj entry lo to result ka asli test **1-2 mahine baad** hona hai. Beech ke din-hafte ka shor ignore karo — stop-loss (-10%) ke alawa koi reaction mat do.
 
-## 📒 SYSTEM KA APNA REPORT CARD (pichhle 12 mahine ke 207 daily signals — khud ka hisaab)
+## 📒 SYSTEM KA APNA REPORT CARD (pichhle 12 mahine ke 206 daily signals — khud ka hisaab)
 
-**20-din accuracy: 69%  |  40-din accuracy: 55%** (✅ = jo promise kiya wahi hua: bullish/neutral bucket → market upar; STRONG_DOWN → market baseline se kamzor)
+**20-din accuracy: 68%  |  40-din accuracy: 54%** (✅ = jo promise kiya wahi hua: bullish/neutral bucket → market upar; STRONG_DOWN → market baseline se kamzor)
 
 | Bucket | Signals | 20-din sahi | 40-din sahi | Avg 20d | Avg 40d |
 |---|---|---|---|---|---|
 | STRONG_UP | 48 | 52% | 31% | +0.3% | -1.0% |
-| MILD_UP | 32 | 72% | 38% | +1.1% | -1.6% |
-| NEUTRAL | 53 | 58% | 43% | +0.0% | -1.1% |
+| MILD_UP | 31 | 71% | 35% | +1.1% | -1.7% |
+| NEUTRAL | 53 | 57% | 42% | -0.1% | -1.2% |
 | MILD_DOWN | 21 | 48% | 52% | -0.5% | -1.5% |
 | STRONG_DOWN | 53 | 100% | 100% | -4.3% | -4.9% |
 
@@ -64,22 +62,22 @@ Kyun? Market girawat mein hai LEKIN bade khiladi kharid rahe hain — dheere-dhe
 
 | Signal din | Bucket | 20-din result | 40-din result |
 |---|---|---|---|
+| 2026-09-02 | NEUTRAL | -6.2% ❌ | -2.0% ❌ |
 | 2026-09-01 | NEUTRAL | -6.0% ❌ | -4.2% ❌ |
 | 2026-08-31 | NEUTRAL | -5.7% ❌ | -4.7% ❌ |
 | 2026-08-28 | MILD_DOWN | -5.8% ❌ | -6.1% ❌ |
 | 2026-08-27 | MILD_DOWN | -3.9% ❌ | -5.6% ❌ |
 | 2026-08-26 | MILD_DOWN | -4.7% ❌ | -6.0% ❌ |
-| 2026-08-25 | NEUTRAL | -3.6% ❌ | -7.1% ❌ |
 
 **Abhi chal rahe (open) signals:**
 
 | Signal din | Bucket | Beete din | Ab tak |
 |---|---|---|---|
-| 2026-10-29 | MILD_UP | 1 din | +0.5% ⏳ |
-| 2026-10-28 | NEUTRAL | 2 din | +1.6% ⏳ |
-| 2026-10-27 | NEUTRAL | 3 din | +1.3% ⏳ |
-| 2026-10-26 | STRONG_UP | 4 din | +1.3% ⏳ |
-| 2026-10-23 | STRONG_UP | 5 din | +2.0% ⏳ |
+| 2026-10-30 | STRONG_UP | 1 din | +1.7% ⏳ |
+| 2026-10-29 | MILD_UP | 2 din | +2.2% ⏳ |
+| 2026-10-28 | NEUTRAL | 3 din | +3.3% ⏳ |
+| 2026-10-27 | NEUTRAL | 4 din | +3.0% ⏳ |
+| 2026-10-26 | STRONG_UP | 5 din | +3.0% ⏳ |
 
 > 🪞 **Ye section khud-ba-khud roz update hota hai — system apne purane signals se bhaag nahi sakta.** Accuracy girne lage to turant dikh jayega.
 
@@ -88,10 +86,10 @@ Kyun? Market girawat mein hai LEKIN bade khiladi kharid rahe hain — dheere-dhe
 | Cheez | Status |
 |---|---|
 | Entry | **22,603** (2026-10-07, B3 STRONG_BUY par) |
-| Abhi | **23,053** → P&L **+1.99%** 🟢 |
-| Stop-loss (-10%) | **20,343** (abhi stop se +13.3% upar) |
-| Exit signal | score abhi +3.1 (exit jab <= -2.5) — HOLD |
-| Hold duration | 23 din (target hold: 1-2 mahine) |
+| Abhi | **23,441** → P&L **+3.71%** 🟢 |
+| Stop-loss (-10%) | **20,343** (abhi stop se +15.2% upar) |
+| Exit signal | score abhi +3.6 (exit jab <= -2.5) — HOLD |
+| Hold duration | 26 din (target hold: 1-2 mahine) |
 
 > 🎯 **Matlab:** trade chaalu hai — kuch mat karo. Sirf 2 cheez par exit: (1) Nifty 20,343 ke neeche band ho, ya (2) yahan exit signal aa jaye. Beech ka shor ignore.
 
@@ -111,47 +109,47 @@ Kyun? Market girawat mein hai LEKIN bade khiladi kharid rahe hain — dheere-dhe
 
 ## 🧭 SECTOR ROTATION — SABSE MAJBOOT SECTOR (15-saal tested)
 
-**✅ ACTIVE** — OI signal bullish hai (score +3.1 ≥ +1.0), to sector tilt ka tested edge ABHI chalu hai.
+**✅ ACTIVE** — OI signal bullish hai (score +3.6 ≥ +1.0), to sector tilt ka tested edge ABHI chalu hai.
 
 | Rank | Sector | 6-mahina momentum |
 |---|---|---|
-| 1 | 🟢 **IT** | +14.8% |
-| 2 | 🟢 **Telecom** | +7.2% |
-| 3 | · **Pharma** | +4.0% |
-| 4 | · **Realty** | +3.2% |
-| 5 | · **Bank** | +2.5% |
-| 6 | · **Auto** | +1.3% |
-| 7 | · **CapGoods** | -4.0% |
-| 8 | · **Consumer** | -4.1% |
-| 9 | · **Infra** | -4.2% |
-| 10 | · **Energy** | -7.3% |
-| 11 | · **Cement** | -12.0% |
-| 12 | · **Finance** | -13.6% |
-| 13 | · **Metal** | -15.3% |
-| 14 | 🔴 **FMCG** | -15.4% |
-| 15 | 🔴 **Power** | -19.5% |
+| 1 | 🟢 **IT** | +14.9% |
+| 2 | 🟢 **Pharma** | +3.3% |
+| 3 | · **Telecom** | +3.3% |
+| 4 | · **Realty** | +0.9% |
+| 5 | · **Bank** | -0.7% |
+| 6 | · **Auto** | -2.2% |
+| 7 | · **Consumer** | -4.7% |
+| 8 | · **CapGoods** | -5.1% |
+| 9 | · **Infra** | -6.8% |
+| 10 | · **Energy** | -9.1% |
+| 11 | · **Cement** | -14.3% |
+| 12 | · **FMCG** | -15.7% |
+| 13 | · **Finance** | -16.4% |
+| 14 | 🔴 **Metal** | -16.6% |
+| 15 | 🔴 **Power** | -18.8% |
 
-**Kya karna:** Agar stocks lene hain to in 2 sectors ke stocks mein lagao — **IT + Telecom**. 15-saal test: in top-2 sectors ka basket, bullish signal ke waqt, baaki market se **+0.8 se +1.0pp (40 din) / +0.8 se +1.4pp (60 din)** aage raha (out-of-sample bhi). ⚠️ Lekin: sector ke 1-2 stocks chunne ka edge test mein NAHI mila — **sector ke 3-4 bade stocks mein barabar baanto** (ya ETF jahan available: IT→ITBEES).
+**Kya karna:** Agar stocks lene hain to in 2 sectors ke stocks mein lagao — **IT + Pharma**. 15-saal test: in top-2 sectors ka basket, bullish signal ke waqt, baaki market se **+0.8 se +1.0pp (40 din) / +0.8 se +1.4pp (60 din)** aage raha (out-of-sample bhi). ⚠️ Lekin: sector ke 1-2 stocks chunne ka edge test mein NAHI mila — **sector ke 3-4 bade stocks mein barabar baanto** (ya ETF jahan available: IT→ITBEES, Pharma→PHARMABEES).
 
 **Top-2 sectors ke stocks (RS order, sirf jankari ke liye):**
-- **IT:** COFORGE (+68%), TECHM (+25%), PERSISTENT (+23%), MPHASIS (+19%), HCLTECH (+18%), LTTS (+13%)
-- **Telecom:** IDEA (+12%), BHARTIARTL (+11%), INDUSTOWER (-1%)
+- **IT:** COFORGE (+60%), TECHM (+25%), HCLTECH (+21%), PERSISTENT (+21%), MPHASIS (+17%), LTTS (+14%)
+- **Pharma:** DIVISLAB (+47%), ZYDUSLIFE (+33%), AUROPHARMA (+13%), APOLLOHOSP (+9%), TORNTPHARM (+6%), DRREDDY (+4%)
 
 > 🔴 = sabse kamzor 2 sectors — yahan naya paisa mat lagao.
 > 📏 Rule yaad rakho: KAB/KITNA upar ka MASTER SIGNAL batata hai — ye section sirf **KAHAN** (kaunsa sector) batata hai. Stop-loss -10% yahan bhi.
 
-## 💎 GEM SCANNER — aaj koi setup nahi (2026-10-30)
+## 💎 GEM SCANNER — aaj koi setup nahi (2026-11-02)
 
 **Pattern (15y decoded):** 52w-high se **40%+ gira** + **EMA50 wapas reclaim** (stabilize ho gaya) + **volume 1.5x surge** (koi bada jama kar raha). Test: aise setup ka **32.4%** chance hota hai +25% move ka (normal stock ka sirf 10.7%).
 
 Aaj koi stock teeno sharten poori nahi karta — **ye normal hai** (ye setup mahine mein ~1 baar aata hai;
-isi selectivity se edge hai). **Banne ke kareeb (volume ka intezaar):** TRENT.
+isi selectivity se edge hai).
 
-**📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: 🔄 OPEN -1% (15d) · 2026-10-09 TRENT: 🔄 OPEN -1% (14d) · 2026-10-14 TATAELXSI: 🔄 OPEN +11% (11d)
+**📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: 🔄 OPEN +5% (16d) · 2026-10-09 TRENT: 🔄 OPEN +5% (15d) · 2026-10-14 TATAELXSI: 🔄 OPEN +11% (12d)
 
 > 🔎 *Imandari note: backtest aaj ke zinda stocks par hai (survivorship) — isliye real expectancy thodi kam maan ke chalo; position sizing (5-10% max) hi asli suraksha hai. Midcaps par ye pattern TEST KIYA aur FAIL hua (+1.2% vs +6.7-11.5%) — gems sirf LARGE-CAP mein khoje jayenge, kyunki quality ka floor wahi hota hai.*
 
-## 🏆 STOCK SWEEP — NIFTY 50 KE SABSE STRONG STOCKS (2026-10-29)
+## 🏆 STOCK SWEEP — NIFTY 50 KE SABSE STRONG STOCKS (2026-10-30)
 
 **Rule (15-saal tested):** A+ = price EMA50 ke upar **+** RS top-10% (126-din return, 50 stocks mein).
 In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)** se beat kiya
@@ -159,14 +157,14 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 
 | Stock | Grade | RS rank /100 | 1-mahina return | Price |
 |---|---|---|---|---|
-| **DIVISLAB** | A+ ⭐ | 100 | +2.5% | 9,664 |
-| **TECHM** | A+ ⭐ | 97 | +17.2% | 1,770 |
-| **KOTAKBANK** | A+ ⭐ | 95 | +13.1% | 459 |
-| **HCLTECH** | A+ ⭐ | 93 | +14.9% | 1,404 |
-| **ICICIBANK** | A+ ⭐ | 91 | +7.3% | 1,387 |
-| BHARTIARTL | B (watch) | 89 | +11.3% | 1,972 |
-| DRREDDY | B (watch) | 87 | +7.4% | 1,345 |
-| TCS | B (watch) | 79 | +21.9% | 2,478 |
+| **DIVISLAB** | A+ ⭐ | 100 | +5.3% | 9,780 |
+| **TECHM** | A+ ⭐ | 97 | +17.5% | 1,791 |
+| **KOTAKBANK** | A+ ⭐ | 95 | +10.7% | 462 |
+| **HCLTECH** | A+ ⭐ | 93 | +16.1% | 1,428 |
+| **ICICIBANK** | A+ ⭐ | 91 | +5.8% | 1,398 |
+| BHARTIARTL | B (watch) | 89 | +12.3% | 1,974 |
+| APOLLOHOSP | B (watch) | 87 | +3.5% | 8,448 |
+| TRENT | B (watch) | 85 | +15.1% | 3,017 |
 
 > 💡 **Kaise use karein:** ye "kya kharidna" ka shortlist hai — lekin **kab/kitna** upar wala MASTER
 > SIGNAL hi batayega. Entry signal weak ho to shortlist sirf watchlist hai. Stop-loss -10% yahan bhi pakka.
@@ -180,46 +178,49 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 4. Ye system 10 mein se 7-8 baar sahi hai — **2-3 baar galat bhi hoga.** Isliye upar ke niyam hi tumhara asli bachav hain.
 5. Kya kharidna hai confusion ho to: **NIFTYBEES** (Nifty 50 ETF) — isi index par ye pura system bana hai.
 
-*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-10-30T20:09:04+00:00 UTC*
+*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-11-02T22:47:24+00:00 UTC*
 
 ---
 
 ## 🧲 INDEX SWEEP SCANNER — konsa index STRONG hai?
 
-*Session: 2026-10-30 · scan: saare NSE indices (bond/G-sec chhodke)*
+*Session: 2026-11-02 · scan: saare NSE indices (bond/G-sec chhodke)*
 
 **Ye kya hai (1 line):** Jab koi index apne purane LOW ke niche wick maar ke wapas UPAR band ho (= stop-loss hunt complete), to wo index aur uske stocks aage strong rehne ke candidate hain.
 
-### ✅ Aaj 2 index mein SWEEP COMPLETE hua:
+### ✅ Aaj 3 index mein SWEEP COMPLETE hua:
 
 | # | GRADE | Index | 20d RS rank | Swept Level | Depth% | Wick% | Close vs Level | RSI | Trend(>E50) | Score |
 |---|-------|-------|-------------|-------------|--------|-------|----------------|-----|-------------|-------|
-| 1 | 🟡 B | **NIFTY100 Quality 30** | 83/100 | 5386.50 | 0.14 | 41 | +0.54% | 52 | ❌ | 56 |
-| 2 | 🟡 B | **Nifty Non-Cyclical Consumer** | 67/100 | 14292.15 | 0.17 | 65 | +0.48% | 50 | ❌ | 63 |
+| 1 | 🟡 B | **NIFTY Quality Low-Volatility 30** | 70/100 | 15824.70 | 0.11 | 63 | +0.68% | 55 | ❌ | 66 |
+| 2 | ⚪ C | **Nifty500 Momentum 50** | 24/100 | 51573.60 | 0.18 | 39 | +1.06% | 49 | ❌ | 64 |
+| 3 | ⚪ C | **Nifty IPO** | 2/100 | 2244.25 | 0.08 | 63 | +1.79% | 42 | ❌ | 65 |
 
 **GRADE ka matlab (1 saal, 131 indices, 1,486 sweeps par test kiya):**
 - 🟢 **A+** = sweep + index pehle se STRONG (RS≥50) + trend upar → aage 10-20 din baaki market se behtar chalne ke best chances (+0.9% extra, 54-55% beat)
 - 🟡 **B** = sweep + (strong RS *ya* uptrend, dono nahi) → theek-thaak, half conviction
 - ⚪ **C** = weak index ka counter-trend sweep → KOI edge nahi mila, sirf jaankari
 
-**Aaj ka #1: NIFTY100 Quality 30** (🟡 B) — level 5386.50 sweep karke +0.54% upar band hua.
+**Aaj ka #1: NIFTY Quality Low-Volatility 30** (🟡 B) — level 15824.70 sweep karke +0.68% upar band hua.
 
 **Kaise use karna (swing ke liye):**
 - Ye WATCHLIST hai, buy-order nahi — A+ wale index (aur uske bade stocks) nazar mein rakho
-- Agle din index **5386.50 ke UPAR TIKA RAHE** to setup valid
-- Setup FAIL = close wapas sweep low (5379.15) ke niche → bhool jao
+- Agle din index **15824.70 ke UPAR TIKA RAHE** to setup valid
+- Setup FAIL = close wapas sweep low (15806.55) ke niche → bhool jao
 - Paisa lagana hamesha MASTER SIGNAL (upar wala) ke hisab se — ye scanner sirf batata hai KONSA index/sector strong hai
 
-![NIFTY100 Quality 30](charts/sweep_nifty100_quality_30.png)
+![NIFTY Quality Low-Volatility 30](charts/sweep_nifty_quality_low_volatility_30.png)
 
-![Nifty Non-Cyclical Consumer](charts/sweep_nifty_non_cyclical_consumer.png)
+![Nifty500 Momentum 50](charts/sweep_nifty500_momentum_50.png)
+
+![Nifty IPO](charts/sweep_nifty_ipo.png)
 
 
 ---
 
 ## 📅 WEEKLY SWEEP SCANNER — bada timeframe, zyada strong signal
 
-*Last closed week ke hisab se · data till 2026-10-30 · ye signal pura hafta valid rehta hai*
+*Last closed week ke hisab se · data till 2026-11-02 · ye signal pura hafta valid rehta hai*
 
 **Ye kya hai (1 line):** Jo kaam daily sweep 1 din mein karta hai, wahi WEEKLY candle par ho to bade khiladi ka POORE HAFTE ka sauda dikhta hai — isliye ye signal zyada bharosemand hai (15-saal test: Nifty +8 hafte 69% win, Bank Nifty 76% win).
 
@@ -227,7 +228,7 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 
 | # | GRADE | Index | Sweep type | Swept Level | Depth% | Wick% | Pools | 8w RS | Trend | Score |
 |---|-------|-------|-----------|-------------|--------|-------|-------|-------|-------|-------|
-| 1 | 🟢 A+ | **Nifty Bank** | old swing-low sweep | 53785.70 | 0.30 | 43 | 1 | 62/100 | ❌ | 47 |
+| 1 | 🟢 A+ | **Nifty Bank** | old swing-low sweep | 53785.70 | 0.30 | 43 | 1 | 51/100 | ❌ | 47 |
 
 **GRADE ka matlab (2 saal, 106 indices, 303 weekly sweeps par test):**
 - 🟢 **A+** = sweep + index pehle se STRONG (8-hafte RS≥50) → agle 8 hafte market se +2.5% extra, 69% baar beat — YE wale par dhyan do
@@ -244,6 +245,15 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 
 ![Nifty Bank](charts/wsweep_nifty_bank.png)
 
+### ⏳ IS HAFTE BAN RAHE HAIN (abhi confirm NAHI — Friday close ka wait karo):
+
+| Index | Sweep type | Level | 8w RS | Score (abhi tak) |
+|-------|-----------|-------|-------|------------------|
+| India VIX | old swing-low sweep | 15.17 | 100/100 | 68 |
+| Nifty Top 10 Equal Weight | old swing-low sweep | 8510.60 | 96/100 | 62 |
+
+⚠️ Hafta khatam hone se pehle ye badal/gayab ho sakte hain — sirf nazar rakho, act Friday ke baad.
+
 
 ---
 
@@ -251,52 +261,52 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 
 *Yahan har sweep 1-2 hafte tak dikhta rahega taaki khud dekh sako: sweep ke baad sach mein uptrend aaya ya nahi.*
 
-### 🧲 DAILY sweeps (pichle 10 din ke 65 setups):
+### 🧲 DAILY sweeps (pichle 10 din ke 63 setups):
 
 | Index | Sweep kab | Kitne din hue | Tab close | Ab close | Badlav | Status |
 |-------|-----------|---------------|-----------|----------|--------|--------|
-| **Nifty Shariah 25** | 2026-10-29 | 1 din | 7625.80 | 7661.60 | **+0.5%** | ✅ UPTREND chal raha |
-| **NIFTY Alpha Quality Low-Volatility 30** | 2026-10-29 | 1 din | 21263.75 | 21336.10 | **+0.3%** | ✅ UPTREND chal raha |
-| **Nifty500 Multicap India Manufacturing 50:30:20** | 2026-10-29 | 1 din | 15627.00 | 15571.10 | **-0.4%** | 🟡 WATCH (level ke upar tika hai) |
-| **Nifty500 Momentum 50** | 2026-10-29 | 1 din | 51999.35 | 51617.00 | **-0.7%** | 🟡 WATCH (level ke upar tika hai) |
-| **Nifty Alpha 50** | 2026-10-29 | 1 din | 53204.45 | 52498.60 | **-1.3%** | 🟠 KAMZOR (level ke niche, par sweep low nahi toda) |
-| **Nifty IPO** | 2026-10-29 | 1 din | 2307.30 | 2269.70 | **-1.6%** | ❌ FAIL (sweep low tod diya) |
-| **NIFTY Smallcap 100** | 2026-10-29 | 1 din | 18811.35 | 18463.60 | **-1.8%** | ❌ FAIL (sweep low tod diya) |
-| **Nifty IT** | 2026-10-28 | 2 din | 31553.40 | 32606.90 | **+3.3%** | ✅ UPTREND chal raha |
-| **Nifty50 Shariah** | 2026-10-28 | 2 din | 4097.00 | 4194.75 | **+2.4%** | ✅ UPTREND chal raha |
-| **Nifty Pharma** | 2026-10-28 | 2 din | 26541.35 | 27124.85 | **+2.2%** | ✅ UPTREND chal raha |
-| **Nifty Top 20 Equal Weight** | 2026-10-28 | 2 din | 8439.15 | 8604.70 | **+2.0%** | ✅ UPTREND chal raha |
-| **Nifty Non-Cyclical Consumer** | 2026-10-28 | 2 din | 14093.90 | 14361.20 | **+1.9%** | ✅ UPTREND chal raha |
-| *...aur 53 setups* | | | | | | *(unme ✅ 37 / ❌ 8)* |
+| **Nifty Non-Cyclical Consumer** | 2026-10-30 | 1 din | 14361.20 | 14520.85 | **+1.1%** | ✅ UPTREND chal raha |
+| **NIFTY100 Quality 30** | 2026-10-30 | 1 din | 5415.40 | 5467.35 | **+1.0%** | ✅ UPTREND chal raha |
+| **Nifty500 Multicap India Manufacturing 50:30:20** | 2026-10-29 | 2 din | 15627.00 | 15969.75 | **+2.2%** | ✅ UPTREND chal raha |
+| **Nifty Shariah 25** | 2026-10-29 | 2 din | 7625.80 | 7757.05 | **+1.7%** | ✅ UPTREND chal raha |
+| **NIFTY Alpha Quality Low-Volatility 30** | 2026-10-29 | 2 din | 21263.75 | 21507.60 | **+1.1%** | ✅ UPTREND chal raha |
+| **Nifty500 Momentum 50** | 2026-10-29 | 2 din | 51999.35 | 52122.60 | **+0.2%** | ✅ UPTREND chal raha |
+| **Nifty Alpha 50** | 2026-10-29 | 2 din | 53204.45 | 52725.40 | **-0.9%** | 🟡 WATCH (level ke upar tika hai) |
+| **Nifty IPO** | 2026-10-29 | 2 din | 2307.30 | 2284.40 | **-1.0%** | ❌ FAIL (sweep low tod diya) |
+| **NIFTY Smallcap 100** | 2026-10-29 | 2 din | 18811.35 | 18595.30 | **-1.1%** | 🟠 KAMZOR (level ke niche, par sweep low nahi toda) |
+| **Nifty Top 20 Equal Weight** | 2026-10-28 | 3 din | 8439.15 | 8701.50 | **+3.1%** | ✅ UPTREND chal raha |
+| **Nifty India Corporate Group Index - Tata Group 25% Cap** | 2026-10-28 | 3 din | 13683.35 | 14095.45 | **+3.0%** | ✅ UPTREND chal raha |
+| **Nifty200 Value 30** | 2026-10-28 | 3 din | 13678.15 | 14086.55 | **+3.0%** | ✅ UPTREND chal raha |
+| *...aur 51 setups* | | | | | | *(unme ✅ 45 / ❌ 4)* |
 
 ### 📅 WEEKLY sweeps (pichle 3 closed weeks ke 6 setups):
 
 | Index | Sweep week | Kitne hafte hue | Pools | Tab close | Ab close | Badlav | Status |
 |-------|------------|-----------------|-------|-----------|----------|--------|--------|
-| **Nifty Bank** | 2026-10-30 | 0 hafte | 1 | 54686.95 | 54686.95 | **+0.0%** | 🟡 WATCH (level ke upar tika hai) |
-| **Nifty PSU Bank** | 2026-10-16 | 2 hafte | 1 | 8094.95 | 8234.85 | **+1.7%** | ✅ UPTREND chal raha |
-| **Nifty Infrastructure** | 2026-10-16 | 2 hafte | 1 | 8725.60 | 8799.00 | **+0.8%** | ✅ UPTREND chal raha |
-| **Nifty India Tourism** | 2026-10-16 | 2 hafte | 1 | 7564.70 | 7613.45 | **+0.6%** | ✅ UPTREND chal raha |
-| **Nifty India Consumption** | 2026-10-16 | 2 hafte | 1 | 11054.65 | 11090.70 | **+0.3%** | ✅ UPTREND chal raha |
-| **Nifty Non-Cyclical Consumer** | 2026-10-16 | 2 hafte | 2 ⚠️ | 14438.50 | 14361.20 | **-0.5%** | 🟡 WATCH (level ke upar tika hai) |
+| **Nifty Bank** | 2026-10-30 | 0 hafte | 1 | 54686.95 | 55002.20 | **+0.6%** | ✅ UPTREND chal raha |
+| **Nifty Infrastructure** | 2026-10-16 | 2 hafte | 1 | 8725.60 | 9124.95 | **+4.6%** | ✅ UPTREND chal raha |
+| **Nifty PSU Bank** | 2026-10-16 | 2 hafte | 1 | 8094.95 | 8346.95 | **+3.1%** | ✅ UPTREND chal raha |
+| **Nifty India Tourism** | 2026-10-16 | 2 hafte | 1 | 7564.70 | 7733.75 | **+2.2%** | ✅ UPTREND chal raha |
+| **Nifty India Consumption** | 2026-10-16 | 2 hafte | 1 | 11054.65 | 11202.65 | **+1.3%** | ✅ UPTREND chal raha |
+| **Nifty Non-Cyclical Consumer** | 2026-10-16 | 2 hafte | 2 ⚠️ | 14438.50 | 14520.85 | **+0.6%** | ✅ UPTREND chal raha |
 
-**Scorecard (weekly):** ✅ 4 working | ❌ 0 failed | baki watch/kamzor — market ke saath milake dekho (agar pura market gira hai to sweep-fail market ki galti hai, system ki nahi).
+**Scorecard (weekly):** ✅ 6 working | ❌ 0 failed | baki watch/kamzor — market ke saath milake dekho (agar pura market gira hai to sweep-fail market ki galti hai, system ki nahi).
 
 ⚠️ = Pools≥2 (ek saath kai lows toda) — test mein ye setups KAMZOR nikle (43% beat vs 59%), inse bachke raho.
 
 **Status samajhna:** ✅ = sweep sahi nikla, uptrend chal raha | 🟡 = level ke upar hai, thoda aur time do | 🟠 = kamzor pada | ❌ = sweep low toot gaya = setup FAIL, bhool jao
 
-![Nifty Shariah 25](charts/track_nifty_shariah_25.png)
+![Nifty Non-Cyclical Consumer](charts/track_nifty_non_cyclical_consumer.png)
 
-![NIFTY Alpha Quality Low-Volatility 30](charts/track_nifty_alpha_quality_low_volatility_30.png)
+![NIFTY100 Quality 30](charts/track_nifty100_quality_30.png)
 
 ![Nifty500 Multicap India Manufacturing 50:30:20](charts/track_nifty500_multicap_india_manufacturing_50_30_20.png)
 
-![Nifty500 Momentum 50](charts/track_nifty500_momentum_50.png)
+![Nifty Shariah 25](charts/track_nifty_shariah_25.png)
 
 ![Nifty Bank](charts/wtrack_nifty_bank.png)
 
-![Nifty PSU Bank](charts/wtrack_nifty_psu_bank.png)
-
 ![Nifty Infrastructure](charts/wtrack_nifty_infrastructure.png)
+
+![Nifty PSU Bank](charts/wtrack_nifty_psu_bank.png)
 
