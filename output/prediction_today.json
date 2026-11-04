@@ -1,27 +1,29 @@
 {
-  "MASTER_entry_signal": "\ud83d\udfe1 WEAK \u2014 chhota lagao",
-  "MASTER_entry_detail": "OI mild bullish. Sirf selective/chhoti entries. [15y: 70% win @40d, +2.3% avg]",
+  "MASTER_entry_signal": "\u26aa WAIT \u2014 naya paisa NAHI",
+  "MASTER_entry_detail": "Koi clear OI edge nahi. Existing positions hold, naya paisa mat lagao. [15y: 66% win @40d \u2014 baseline jitna hi]",
   "MASTER_deploy_signal": "\ud83d\udee1\ufe0f DEFENSIVE (30%)",
   "MASTER_deploy_detail": "Nifty 200DMA ke niche + OI unclear \u2014 capital bachao. Bounce aayega to ACCUMULATE/STRONG signal pakad lega.",
   "bottom_signal_B3": "off",
   "top_warning_T4": "off",
-  "data_date": "2026-11-03",
-  "price_date": "2026-11-03",
-  "nifty_close": 23810.85,
-  "dma200": 24017.57,
-  "score_v2": 1.76,
-  "bucket": "MILD_UP",
+  "data_date": "2026-11-04",
+  "price_date": "2026-11-04",
+  "nifty_close": 23960.6,
+  "dma200": 24008.96,
+  "score_v2": -1.06,
+  "bucket": "MILD_DOWN",
   "components": {
-    "s_pro": -0.2,
-    "s_stk": 1.82,
-    "s_fiiC": -0.2,
-    "s_opt": -0.2,
-    "s_dii": -0.16
+    "s_pro": -0.87,
+    "s_stk": 1.51,
+    "s_fiiC": -0.82,
+    "s_opt": -0.26,
+    "s_dii": -0.2
   },
   "layer1_base_allocation": "30% (Nifty < 200DMA \u2014 defensive)",
-  "layer2_new_entry": "HALF size",
-  "layer3_outlook_40d": "+2.2% avg, 70% up",
-  "layer3_outlook_60d": "+3.2% avg, 71% up",
-  "generated_utc": "2026-11-03T21:17:26+00:00",
-  "new_oi_dates_added": []
+  "layer2_new_entry": "HALF size, selective",
+  "layer3_outlook_40d": "+1.9% avg, 66% up",
+  "layer3_outlook_60d": "+2.8% avg, 65% up",
+  "generated_utc": "2026-11-04T20:49:36+00:00",
+  "new_oi_dates_added": [
+    "2026-11-04"
+  ]
 }
