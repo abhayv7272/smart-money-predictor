@@ -93,7 +93,7 @@ Pichla trade: entry 22,603 (2026-10-07) → exit 24,537 (2026-11-05)
 
 ## 🏦 BANK NIFTY — WAHI SIGNAL, DUSRA INDEX (15-saal verified)
 
-**Aaj:** Bank Nifty **55,914** (+0.67% din ka)
+**Aaj:** Bank Nifty **57,774** (+3.33% din ka)
 
 | Horizon | Aaj ke bucket (STRONG DOWN) ke baad BNF | Baseline |
 |---|---|---|
@@ -177,7 +177,7 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 4. Ye system 10 mein se 7-8 baar sahi hai — **2-3 baar galat bhi hoga.** Isliye upar ke niyam hi tumhara asli bachav hain.
 5. Kya kharidna hai confusion ho to: **NIFTYBEES** (Nifty 50 ETF) — isi index par ye pura system bana hai.
 
-*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-11-05T21:05:55+00:00 UTC*
+*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-11-05T21:35:54+00:00 UTC*
 
 ---
 
