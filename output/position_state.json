@@ -1,6 +1,11 @@
 {
-  "open": true,
-  "entry_date": "2026-10-07",
-  "entry_price": 22603.05,
-  "stop": 20342.74
+  "open": false,
+  "last_exit": {
+    "entry_date": "2026-10-07",
+    "entry_price": 22603.05,
+    "exit_date": "2026-11-05",
+    "exit_price": 24536.6,
+    "pnl": 8.554376511134553,
+    "reason": "EXIT SIGNAL (score -2.7 <= -2.5)"
+  }
 }

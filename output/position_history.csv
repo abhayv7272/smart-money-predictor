@@ -1,0 +1,2 @@
+entry_date,entry_price,exit_date,exit_price,pnl_pct,reason
+2026-10-07,22603.05,2026-11-05,24536.6,+8.55,EXIT SIGNAL (score -2.7 <= -2.5)
