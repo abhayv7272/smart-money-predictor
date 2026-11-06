@@ -5,23 +5,25 @@
   "MASTER_deploy_detail": "Trend upar LEKIN OI STRONG_DOWN \u2014 danger combo, thoda cash nikalo. [15y: sirf 53% win @40d, -0.3% avg \u2014 ye combo historically kharab hai]",
   "bottom_signal_B3": "off",
   "top_warning_T4": "\ud83d\udd34 ACTIVE",
-  "data_date": "2026-11-05",
-  "price_date": "2026-11-05",
-  "nifty_close": 24536.6,
-  "dma200": 24002.69,
-  "score_v2": -2.72,
+  "data_date": "2026-11-06",
+  "price_date": "2026-11-06",
+  "nifty_close": 25030.35,
+  "dma200": 23999.18,
+  "score_v2": -4.43,
   "bucket": "STRONG_DOWN",
   "components": {
-    "s_pro": -1.2,
-    "s_stk": 1.61,
-    "s_fiiC": -1.81,
-    "s_opt": 0.0,
-    "s_dii": -0.05
+    "s_pro": -1.55,
+    "s_stk": 1.27,
+    "s_fiiC": -1.97,
+    "s_opt": 0.02,
+    "s_dii": -0.59
   },
   "layer1_base_allocation": "100% (Nifty > 200DMA)",
   "layer2_new_entry": "NO new entries",
   "layer3_outlook_40d": "+0.1% avg, 54% up",
   "layer3_outlook_60d": "+0.6% avg, 53% up",
-  "generated_utc": "2026-11-05T21:35:54+00:00",
-  "new_oi_dates_added": []
+  "generated_utc": "2026-11-06T20:26:38+00:00",
+  "new_oi_dates_added": [
+    "2026-11-06"
+  ]
 }
