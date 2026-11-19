@@ -5,23 +5,25 @@
   "MASTER_deploy_detail": "India ka trend upar LEKIN America (S&P 500) apne 200DMA ke niche \u2014 global girawat aksar India ko kheench leti hai. Thoda cash rakho. [Verified: ye filter DD -24.5%\u2192-21.9% aur Sharpe 0.67\u21920.74 karta hai]",
   "bottom_signal_B3": "off",
   "top_warning_T4": "\ud83d\udd34 ACTIVE",
-  "data_date": "2026-11-18",
-  "price_date": "2026-11-18",
-  "nifty_close": 25227.95,
-  "dma200": 23994.06,
-  "score_v2": -5.5,
+  "data_date": "2026-11-19",
+  "price_date": "2026-11-19",
+  "nifty_close": 25514.3,
+  "dma200": 23995.75,
+  "score_v2": -4.13,
   "bucket": "STRONG_DOWN",
   "components": {
-    "s_pro": -1.1,
-    "s_stk": 0.1,
-    "s_fiiC": -1.94,
-    "s_opt": 0.08,
-    "s_dii": -1.25
+    "s_pro": -0.76,
+    "s_stk": 0.21,
+    "s_fiiC": -1.97,
+    "s_opt": 0.67,
+    "s_dii": -1.26
   },
   "layer1_base_allocation": "100% (Nifty > 200DMA)",
   "layer2_new_entry": "NO new entries",
   "layer3_outlook_40d": "+0.1% avg, 54% up",
   "layer3_outlook_60d": "+0.6% avg, 53% up",
-  "generated_utc": "2026-11-18T22:43:06+00:00",
-  "new_oi_dates_added": []
+  "generated_utc": "2026-11-19T22:09:45+00:00",
+  "new_oi_dates_added": [
+    "2026-11-19"
+  ]
 }
