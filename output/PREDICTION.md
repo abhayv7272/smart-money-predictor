@@ -42,7 +42,7 @@ Kyun? India ka trend upar hai LEKIN America (S&P 500) girawat mein hai — globa
 | **Kal (1 din)** | ⚡ Halka bounce jhukav | Humne 15 saal test kiya — agle din ka koi bhi signal **coin-flip** hai (53% up, har bucket mein same). Jo bhi "kal ye hoga" bole, usse door raho. ⚡ **PAR AAJ exception fire hua:** Pro ne aaj ek hi din mein bhaari betting kaati (z=-3.4). 15 saal mein aise din ke baad agla din **12/14 saal** average se behtar raha — halka BOUNCE jhukav. (Hint hai, guarantee nahi — position sizing mat badlo.) |
 | **1-4 din** | ⚡ Halka bounce jhukav | Bucket se 1-4 din ka koi bharosemand edge NAHI (aaj ka bucket +0.0%/52% vs baseline +0.2%/56% — farak na ke barabar). Sirf ⚡/🌀 flags fire hone par halka jhukav banta hai. ⚡ **Aaj Pro-flush fire hua (z=-3.4)** — bounce jhukav 1-4 din tak bhi tested hai (4d edge +0.17/+0.33pp dono test-periods). ⚡ **Flush BAHUT bada tha (z<-2)** — aisa saal mein ~6 baar hota hai; 2 hafte tak bounce jhukav (4d +0.5pp, 10d +0.4/+0.8pp dono periods). Phir bhi: jhukav hai, trade ka licence nahi. |
 | **15 din (3 hafte)** | 🔻 Kamzori ka signal | Aaj ka bucket: -0.0%/52% vs baseline +0.7%/60%. Yahan se signal jaagna shuru hota hai (curve-test: 15d par bearish edge pakki, bullish edge 20d+ se) — par asli kaam 20-60 din mein hi hota hai. 🔻 **Dhyan do: STRONG_DOWN ka 15-din edge ASLI hai** — 15 saal mein dono test-periods kamzor (IS -0.6pp / OOS -0.9pp, 52% vs 60% baseline). Agle 2-3 hafte naya paisa lagane ki jaldi mat karo. |
-| **1 mahina (20 din)** | -0.0% avg, **51% baar upar** | baseline se KHARAB (baseline +1.0%/62%). Halka edge shuru hota hai. |
+| **1 mahina (20 din)** | -0.0% avg, **51% baar upar** | baseline se KHARAB (baseline +1.0%/62%). Halka edge shuru hota hai. 🔥 **Bonus aaj:** India VIX dar-zone mein hai (saal ka top 19% — percentile 81). 15 saal mein jab dar itna zyada tha, agla 1 mahina historically **aur behtar** nikla (+0.7-0.8pp extra, 66-69% baar up). |
 | **2 mahine (40-60 din)** | +0.7% avg, **53% baar upar** | baseline se KHARAB (baseline +3.0%/68%). **YAHI is system ka asli edge hai** — isliye swing hold 1-2 mahine ka hai. |
 
 > 💡 **Matlab:** aaj entry lo to result ka asli test **1-2 mahine baad** hona hai. Beech ke din-hafte ka shor ignore karo — stop-loss (-10%) ke alawa koi reaction mat do.
@@ -85,7 +85,7 @@ Kyun? India ka trend upar hai LEKIN America (S&P 500) girawat mein hai — globa
 
 ## 🏦 BANK NIFTY — WAHI SIGNAL, DUSRA INDEX (15-saal verified)
 
-**Aaj:** Bank Nifty **64,635** (+2.49% din ka)
+**Aaj:** Bank Nifty **62,585** (-3.17% din ka)
 
 | Horizon | Aaj ke bucket (STRONG DOWN) ke baad BNF | Baseline |
 |---|---|---|
@@ -105,26 +105,26 @@ Kyun? India ka trend upar hai LEKIN America (S&P 500) girawat mein hai — globa
 | Rank | Sector | 6-mahina momentum |
 |---|---|---|
 | 1 | 🟢 **Realty** | +20.4% |
-| 2 | 🟢 **Bank** | +19.3% |
-| 3 | · **IT** | +10.4% |
-| 4 | · **Auto** | +10.0% |
-| 5 | · **Pharma** | +7.0% |
-| 6 | · **Energy** | +4.0% |
-| 7 | · **CapGoods** | +3.2% |
-| 8 | · **Infra** | +1.2% |
-| 9 | · **Consumer** | -0.6% |
-| 10 | · **Telecom** | -1.0% |
-| 11 | · **Finance** | -1.7% |
-| 12 | · **Cement** | -2.9% |
-| 13 | · **FMCG** | -4.8% |
-| 14 | 🔴 **Power** | -12.4% |
-| 15 | 🔴 **Metal** | -15.2% |
+| 2 | 🟢 **Bank** | +15.6% |
+| 3 | · **IT** | +12.7% |
+| 4 | · **Auto** | +8.5% |
+| 5 | · **Pharma** | +6.5% |
+| 6 | · **Energy** | +2.1% |
+| 7 | · **Infra** | -0.2% |
+| 8 | · **CapGoods** | -0.6% |
+| 9 | · **Consumer** | -2.4% |
+| 10 | · **Finance** | -2.4% |
+| 11 | · **Telecom** | -2.5% |
+| 12 | · **Cement** | -4.3% |
+| 13 | · **FMCG** | -5.1% |
+| 14 | 🔴 **Power** | -15.5% |
+| 15 | 🔴 **Metal** | -18.2% |
 
 **Kya karna:** Intezaar. Jab upar wala signal MILD_UP/STRONG_UP ho, tab ye section ACTIVE ho jayega.
 
 **Top-2 sectors ke stocks (RS order, sirf jankari ke liye):**
-- **Realty:** DLF (+35%), PHOENIXLTD (+28%), PRESTIGE (+20%), GODREJPROP (+10%), OBEROIRLTY (+9%)
-- **Bank:** PNB (+51%), KOTAKBANK (+33%), ICICIBANK (+29%), FEDERALBNK (+29%), IDFCFIRSTB (+25%), SBIN (+20%)
+- **Realty:** DLF (+35%), PHOENIXLTD (+29%), PRESTIGE (+20%), OBEROIRLTY (+9%), GODREJPROP (+8%)
+- **Bank:** PNB (+44%), KOTAKBANK (+30%), ICICIBANK (+26%), FEDERALBNK (+25%), IDFCFIRSTB (+20%), SBIN (+17%)
 
 > 🔴 = sabse kamzor 2 sectors — yahan naya paisa mat lagao.
 > 📏 Rule yaad rakho: KAB/KITNA upar ka MASTER SIGNAL batata hai — ye section sirf **KAHAN** (kaunsa sector) batata hai. Stop-loss -10% yahan bhi.
@@ -136,11 +136,11 @@ Kyun? India ka trend upar hai LEKIN America (S&P 500) girawat mein hai — globa
 Aaj koi stock teeno sharten poori nahi karta — **ye normal hai** (ye setup mahine mein ~1 baar aata hai;
 isi selectivity se edge hai).
 
-**📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: 🔄 OPEN +13% (30d) · 2026-10-09 TRENT: 🔄 OPEN +13% (29d) · 2026-10-14 TATAELXSI: 🔄 OPEN +12% (26d)
+**📒 Pichle gems ka hisaab:** 2026-10-08 TRENT: 🔄 OPEN +11% (30d) · 2026-10-09 TRENT: 🔄 OPEN +12% (29d) · 2026-10-14 TATAELXSI: 🔄 OPEN +12% (26d)
 
 > 🔎 *Imandari note: backtest aaj ke zinda stocks par hai (survivorship) — isliye real expectancy thodi kam maan ke chalo; position sizing (5-10% max) hi asli suraksha hai. Midcaps par ye pattern TEST KIYA aur FAIL hua (+1.2% vs +6.7-11.5%) — gems sirf LARGE-CAP mein khoje jayenge, kyunki quality ka floor wahi hota hai.*
 
-## 🏆 STOCK SWEEP — NIFTY 50 KE SABSE STRONG STOCKS (2026-11-20)
+## 🏆 STOCK SWEEP — NIFTY 50 KE SABSE STRONG STOCKS (2026-11-23)
 
 **Rule (15-saal tested):** A+ = price EMA50 ke upar **+** RS top-10% (126-din return, 50 stocks mein).
 In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)** se beat kiya
@@ -148,14 +148,14 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 
 | Stock | Grade | RS rank /100 | 1-mahina return | Price |
 |---|---|---|---|---|
-| **DIVISLAB** | A+ ⭐ | 100 | +21.7% | 11,180 |
-| **KOTAKBANK** | A+ ⭐ | 97 | +17.8% | 516 |
-| **ICICIBANK** | A+ ⭐ | 95 | +18.4% | 1,640 |
-| **TECHM** | A+ ⭐ | 93 | -4.8% | 1,746 |
-| **BAJFINANCE** | A+ ⭐ | 91 | +21.2% | 1,122 |
-| SBIN | B (watch) | 89 | +21.0% | 1,165 |
-| BHARTIARTL | B (watch) | 87 | +14.3% | 2,162 |
-| HCLTECH | B (watch) | 85 | -5.6% | 1,344 |
+| **DIVISLAB** | A+ ⭐ | 100 | +22.3% | 11,203 |
+| **KOTAKBANK** | A+ ⭐ | 97 | +15.1% | 503 |
+| **ICICIBANK** | A+ ⭐ | 95 | +13.4% | 1,586 |
+| **TECHM** | A+ ⭐ | 93 | -2.0% | 1,778 |
+| **BAJFINANCE** | A+ ⭐ | 91 | +16.3% | 1,096 |
+| HCLTECH | B (watch) | 89 | -4.0% | 1,364 |
+| BHARTIARTL | B (watch) | 87 | +14.1% | 2,162 |
+| SBIN | B (watch) | 85 | +16.8% | 1,133 |
 
 > 💡 **Kaise use karein:** ye "kya kharidna" ka shortlist hai — lekin **kab/kitna** upar wala MASTER
 > SIGNAL hi batayega. Entry signal weak ho to shortlist sirf watchlist hai. Stop-loss -10% yahan bhi pakka.
@@ -169,7 +169,7 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 4. Ye system 10 mein se 7-8 baar sahi hai — **2-3 baar galat bhi hoga.** Isliye upar ke niyam hi tumhara asli bachav hain.
 5. Kya kharidna hai confusion ho to: **NIFTYBEES** (Nifty 50 ETF) — isi index par ye pura system bana hai.
 
-*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-11-24T01:40:59+00:00 UTC*
+*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-11-24T02:36:50+00:00 UTC*
 
 ---
 
