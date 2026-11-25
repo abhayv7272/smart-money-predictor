@@ -87,7 +87,7 @@ Kyun? India ka trend upar hai LEKIN America (S&P 500) girawat mein hai — globa
 
 ## 🏦 BANK NIFTY — WAHI SIGNAL, DUSRA INDEX (15-saal verified)
 
-**Aaj:** Bank Nifty **62,585** (-3.17% din ka)
+**Aaj:** Bank Nifty **63,703** (+1.79% din ka)
 
 | Horizon | Aaj ke bucket (STRONG DOWN) ke baad BNF | Baseline |
 |---|---|---|
@@ -171,7 +171,7 @@ In stocks ne equal-weight basket ko average **+1.0pp (40 din) / +1.7pp (60 din)*
 4. Ye system 10 mein se 7-8 baar sahi hai — **2-3 baar galat bhi hoga.** Isliye upar ke niyam hi tumhara asli bachav hain.
 5. Kya kharidna hai confusion ho to: **NIFTYBEES** (Nifty 50 ETF) — isi index par ye pura system bana hai.
 
-*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-11-25T23:07:11+00:00 UTC*
+*Ye financial advice nahi hai — 15 saal ke data par bana educational system hai. | Generated: 2026-11-25T23:49:24+00:00 UTC*
 
 ---
 
